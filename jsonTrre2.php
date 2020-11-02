@@ -73,7 +73,7 @@ $before2 = '{
 }';
 $after2 = '{
   "a": 1,
-  "b": 56,
+  "b": null,
   "z": "add",
   "common": {
     "follow": false,
@@ -105,30 +105,39 @@ $after2 = '{
     }
   }
 }';
-
+// правильный вывод сравнения $before2 и $after2 сделал для тестов. $before2 и $after2 отличаются
+// от представленных на хекслете, просто добавил некоторые свои данные
+$resultBefore2AndAfter2 = '{" a":1,"-b":2,"+b":"null","common":{"+follow":"false"," setting1":"Value 1","-setting2":200,"-setting3":"true","+setting3":"null","+setting4":"blah blah","+setting5":{"key5":"value5"},"setting6":{"doge":{"-wow":"","+wow":"so much"}," key":"value","+ops":"vops"}},"-d":3,"group1":{"-baz":"bas","+baz":"bars"," foo":"bar","-nest":{"key":"value"},"+nest":"str"},"-group2":{"abc":12345,"deep":{"id":45}},"+group3":{"fee":100500,"deep":{"id":{"number":45}}},"+z":"add"}';
 function deepDiff($arrBefore, $arrAfter, $acc = [])
 {
     foreach ($arrBefore as $keyBefore => $valBefore) {
         foreach ($arrAfter as $keyAfter => $valAfter) {
             if (array_key_exists($keyBefore, $arrAfter)) {
+              // равны ли ключи
                 if ($keyBefore == $keyAfter && is_array($valBefore) && is_array($valAfter)) {
                     $acc[$keyBefore] = deepDiff($valBefore, $valAfter);
                 } elseif ($keyBefore == $keyAfter && $valBefore == $valAfter) {
                     $acc[$keyBefore] = ['value' => $valBefore, 'status' => 'dontChange'];
+                    break;
                 } elseif ($keyBefore == $keyAfter && $valBefore != $valAfter) {
-                    $valAfter = is_bool($valAfter) || is_null($valAfter) ? boolOrNullToString($valAfter) : $valAfter;
-                    $valBefore = is_bool($valBefore) || is_null($valBefore) ? boolOrNullToString($valBefore) : $valBefore;
-                    $acc[$keyBefore] = ['beforeValue' => $valBefore, 'afterValue' => $valAfter];
+                    // $valAfter = is_bool($valAfter) || is_null($valAfter) ? boolOrNullToString($valAfter) : $valAfter;
+                    $valAfter = boolOrNullToString($valAfter);
+                    // $valBefore = is_bool($valBefore) || is_null($valBefore) ? boolOrNullToString($valBefore) : $valBefore;
+                    $valBefore = boolOrNullToString($valBefore);
+                    $acc[$keyBefore] = ['beforeValue' => $valBefore, 'afterValue' => $valAfter, 'skip' => true];
+                    break;
                 }
             } else {
-                $acc[$keyBefore] = ['value' => $valBefore, 'status' => 'removed', 'test' => 'test'];
+                $acc[$keyBefore] = ['value' => $valBefore, 'status' => 'removed', 'skip' => true];
+                break;
             }
         }
     }
     foreach ($arrAfter as $keyAfter => $valAfter) {
         if (! array_key_exists($keyAfter, $arrBefore)) {
-            $valAfter = is_bool($valAfter) || is_null($valAfter) ? boolOrNullToString($valAfter) : $valAfter;
-            $acc[$keyAfter] = ['value' => $valAfter, 'status' => 'added', 'test' => 'test'];
+            // $valAfter = is_bool($valAfter) || is_null($valAfter) ? boolOrNullToString($valAfter) : $valAfter;
+            $valAfter =  boolOrNullToString($valAfter);
+            $acc[$keyAfter] = ['value' => $valAfter, 'status' => 'added', 'skip' => true];
         }
     }
     ksort($acc);
@@ -136,21 +145,20 @@ function deepDiff($arrBefore, $arrAfter, $acc = [])
     // return sortArr($acc);
 }
 
-
 function xDif($diff)
 {
     $res = [];
     foreach ($diff as $key => $array) {
-        if (is_array($array) && is_array(reset($array)) && ! array_key_exists('test', $array) && ! array_key_exists('beforeValue', $array)) {
+        if (is_array($array) && is_array(reset($array)) && ! array_key_exists('skip', $array) /*&& ! array_key_exists('beforeValue', $array)*/) {
             $res[$key] = xDif($array);
         } else {
-            if (isset($array['status']) && $array['status'] == 'dontChange') {
+            if (array_key_exists('status', $array) && $array['status'] == 'dontChange') {
                 $res[' ' . $key] = $array['value'];
-            } elseif (isset($array['status']) && $array['status'] == 'removed') {
+            } elseif (array_key_exists('status', $array) && $array['status'] == 'removed') {
                 $res['-' . $key] = $array['value'];
-            } elseif (isset($array['status']) && $array['status'] == 'added') {
+            } elseif (array_key_exists('status', $array) && $array['status'] == 'added') {
                 $res['+' . $key] = $array['value'];
-            } elseif (isset($array['beforeValue']) && isset($array['afterValue'])) {
+            } elseif (array_key_exists('beforeValue', $array) && array_key_exists('afterValue', $array)) {
                 $res['-' . $key] = $array['beforeValue'];
                 $res['+' . $key] = $array['afterValue'];
             }
@@ -158,16 +166,21 @@ function xDif($diff)
     }
     return $res;
 }
+
 function boolOrNullToString($data)
 {
     if (is_null($data)) {
         return 'null';
     }
-    if ($data) {
+    if (is_bool($data) && $data === true) {
         return 'true';
     }
-    return 'false';
+    if (is_bool($data) && $data === false) {
+        return 'false';
+    }
+    return $data;
 }
+
 function correctCurleBrackets($str, $delimiter)
 {
     $search = "";
@@ -183,18 +196,19 @@ function correctCurleBrackets($str, $delimiter)
     return $search;
 }
 // преобразуем из json в массив
-$before2 = json_decode($before, true);
-$after2 = json_decode($after, true);
+$before2 = json_decode($before2, true);
+$after2 = json_decode($after2, true);
 
 // парсим значения
 $diff = deepDiff($before2, $after2);
 // print_r($diff);
 
 // выводим сравнение файлов
-print_r(xDif($diff));
+// print_r(xDif($diff));
   
 $strJson = json_encode(xDif($diff));
+var_dump($strJson === $resultBefore2AndAfter2);
 $tmp = correctCurleBrackets(str_replace([',', ':{', '}'], [PHP_EOL, ':{' . PHP_EOL, PHP_EOL . '}'], $strJson), PHP_EOL);
-
+// file_put_contents('resultDiff2.txt', $strJson);
 // красивый вывод данных, пока не работает
 // var_dump(str_replace('"', "", $tmp));

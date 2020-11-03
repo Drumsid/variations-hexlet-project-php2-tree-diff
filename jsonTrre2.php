@@ -207,8 +207,11 @@ $diff = deepDiff($before2, $after2);
 // print_r(xDif($diff));
   
 $strJson = json_encode(xDif($diff));
+// тестируем вывод 
 var_dump($strJson === $resultBefore2AndAfter2);
 $tmp = correctCurleBrackets(str_replace([',', ':{', '}'], [PHP_EOL, ':{' . PHP_EOL, PHP_EOL . '}'], $strJson), PHP_EOL);
+
 // file_put_contents('resultDiff2.txt', $strJson);
+// file_put_contents('resultArrayDiff2.txt', $diff);
 // красивый вывод данных, пока не работает
 // var_dump(str_replace('"', "", $tmp));

@@ -7,6 +7,7 @@
         {
             "name": "Listen for XDebug",
             "type": "php",
+            "program": "${file}",
             "request": "launch",
             "port": 9000
         },

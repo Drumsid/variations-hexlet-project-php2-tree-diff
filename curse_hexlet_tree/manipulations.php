@@ -8,6 +8,14 @@ require_once __DIR__ . '/../hexlet_tree_lib/index.php';
 // use function Php\Immutable\Fs\Trees\trees\getName;
 // use function Php\Immutable\Fs\Trees\trees\getMeta;
 
+// Реализуйте функцию compressImages(), которая принимает на вход директорию, находит внутри нее
+// картинки и "сжимает" их. Под сжиманием понимается уменьшение свойства size в метаданных в два раза.
+// Функция должна вернуть обновленную директорию со сжатыми картинками и всеми остальными данными, которые
+// были внутри этой директории.
+
+// Картинками считаются все файлы заканчивающиеся на .jpg.
+
+
 $tree = mkdir2(
     'my documents',
     [
@@ -19,4 +27,25 @@ $tree = mkdir2(
     ]
 );
 
-print_r($tree);
+// print_r($tree);
+
+function compressImages($tree)
+{
+    $name = getName($tree);
+    $children = getChildren($tree);
+    $resizeImage = array_map(
+        function ($child) {
+            if (isFile($child)) {
+                $newSize = getMeta($child);
+                $newSize['size'] = $newSize['size'] / 2;
+                return mkFile(getName($child), $newSize);
+            }
+            return mkdir2(getName($child), getChildren($child), getMeta($child));
+        },
+        $children
+    );
+
+    return mkdir2($name, $resizeImage, getMeta($tree));
+}
+
+print_r(compressImages($tree));

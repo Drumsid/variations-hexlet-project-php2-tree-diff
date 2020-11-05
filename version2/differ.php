@@ -51,7 +51,25 @@ $afterTree = test($afterTree);
 // print_r($beforeTree);
 // print_r($afterTree);
 
+// пробую писать дифер функцию
 function differ($beforeTree, $afterTree)
 {
-  
+  $res = array_map(
+    function ($beforeItem) use($afterTree) {
+      return array_map(
+      function ($afterItem) use($beforeItem){
+        if ($afterItem['name'] == $beforeItem['name'] && 
+          $afterItem['meta']['value'] == $beforeItem['meta']['value']
+        ) {
+          return $afterItem;
+        }
+      },
+      $afterTree
+      );
+    },
+    $beforeTree
+  );
+  return $res;
 }
+
+print_r(differ($beforeTree, $afterTree));

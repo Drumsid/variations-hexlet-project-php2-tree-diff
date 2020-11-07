@@ -39,7 +39,7 @@ function compressImages($tree)
                 $newSize = getMeta($child);
                 $newSize['size'] = $newSize['size'] / 2;
                 return mkFile(getName($child), $newSize);
-            } elseif(isFile($child)) {
+            } elseif (isFile($child)) {
                 return mkFile(getName($child), getMeta($child));
             }
             return mkdir2(getName($child), getChildren($child), getMeta($child));

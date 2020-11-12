@@ -39,7 +39,7 @@ $tree2 = mkdir2('/', [
     mkfile('resolve', ['size' => 1000]),
 ]);
 
-
+// my solution
 function calculateSize($tree)
 {
     if (isFile($tree)) {
@@ -82,7 +82,7 @@ function countFileSize($tree)
 function du($tree)
 {
     $children = getChildren($tree);
-    return array_map(
+    $find = array_map(
         function ($item) {
             if (isFile($item)) {
                 return [getName($item), getMeta($item)['size']];
@@ -91,6 +91,43 @@ function du($tree)
         },
         $children
     );
+    usort($find, function ($a, $b){
+        if ($a[1] == $b[1]) {
+            return 0;
+        }
+        return ($a[1] < $b[1]) ? 1 : -1;
+    });
+    return $find;
 }
 
-print_r(du($tree));
+// print_r(du($tree));
+$sort = du($tree);
+print_r($sort);
+
+// hexlet solution
+
+// BEGIN
+function calculateFilesSize($node)
+{
+    return reduce(function ($acc, $n) {
+        if (isDirectory($n)) {
+            return $acc;
+        }
+
+        $meta = getMeta($n);
+
+        return $acc + $meta['size'];
+    }, $node, 0);
+}
+
+function du2($node)
+{
+    $result = array_map(fn($node) => [
+        getName($node), calculateFilesSize($node)
+    ], getChildren($node));
+
+    usort($result, fn($arr1, $arr2) => $arr2[1] <=> $arr1[1]);
+
+    return $result;
+}
+// END

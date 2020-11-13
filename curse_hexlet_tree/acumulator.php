@@ -31,21 +31,28 @@ function findEmptyDirPaths($tree)
 
     // Фильтруем файлы, они нас не интересуют 
     $dirNames = array_filter($children,
-    function ($child) use($path) {
+    function ($child) {
         if(!isFile($child)) {
-            $path .= getName($child);
-            $newChild = mkdir2($path, getChildren($child), getMeta($child));
-            return $newChild;
+            return $child;
         }
         
     });
+
+    $renamePathDir = array_map(
+      function ($item) use($path) {
+        $path .= getName($item);
+        $newChild = mkdir2($path, getChildren($item), getMeta($item));
+        return $newChild;
+      },
+      $dirNames
+    );
 
     // Ищем пустые директории внутри текущей
     $emptyDirNames = array_map(
         function ($dir) {
             return findEmptyDirPaths($dir);
         },
-        $dirNames);
+        $renamePathDir);
 
     // array_flatten выправляет массив, так что он остается плоским
     return array_flatten($emptyDirNames);

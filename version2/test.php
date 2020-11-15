@@ -40,17 +40,16 @@ $objTree = json_decode($tree);
 
 function test($tree)
 {
-  $res = [];
+    $res = [];
 
-  foreach($tree as $key => $val) {
-    if (is_object($val)) {
-      $res[] = ['name' => $key, /*'value' => $val,*/ 'meta' => [], 'type' => 'dir', 'children' => test($val)]; 
+    foreach ($tree as $key => $val) {
+        if (is_object($val)) {
+            $res[] = ['name' => $key, /*'value' => $val,*/ 'meta' => [], 'type' => 'dir', 'children' => test($val)];
+        } else {
+            $res[] = ['name' => $key, 'meta' => ['value' => boolOrNullToString($val)], 'type' => 'file'];
+        }
     }
-    else {
-      $res[] = ['name' => $key, 'meta' => ['value' => boolOrNullToString($val)], 'type' => 'file'];
-    }
-  }
-  return $res;
+    return $res;
 }
 
 function boolOrNullToString($data)

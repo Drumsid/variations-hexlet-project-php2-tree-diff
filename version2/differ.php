@@ -19,17 +19,16 @@ $afterTree = json_decode($afterTree);
 
 function test($tree)
 {
-  $res = [];
+    $res = [];
 
-  foreach($tree as $key => $val) {
-    if (is_object($val)) {
-      $res[] = ['name' => $key, /*'value' => $val,*/ 'meta' => [], 'type' => 'dir', 'children' => test($val)]; 
+    foreach ($tree as $key => $val) {
+        if (is_object($val)) {
+            $res[] = ['name' => $key, /*'value' => $val,*/ 'meta' => [], 'type' => 'dir', 'children' => test($val)];
+        } else {
+            $res[] = ['name' => $key, 'meta' => ['value' => boolOrNullToString($val)], 'type' => 'file'];
+        }
     }
-    else {
-      $res[] = ['name' => $key, 'meta' => ['value' => boolOrNullToString($val)], 'type' => 'file'];
-    }
-  }
-  return $res;
+    return $res;
 }
 
 function boolOrNullToString($data)
@@ -52,24 +51,24 @@ $afterTree = test($afterTree);
 // print_r($afterTree);
 
 // пробую писать дифер функцию
-function differ($beforeTree, $afterTree)
-{
-  $res = array_map(
-    function ($beforeItem) use($afterTree) {
-      return array_map(
-      function ($afterItem) use($beforeItem){
-        if ($afterItem['name'] == $beforeItem['name'] && 
-          $afterItem['meta']['value'] == $beforeItem['meta']['value']
-        ) {
-          return $afterItem;
-        }
-      },
-      $afterTree
-      );
-    },
-    $beforeTree
-  );
-  return $res;
-}
+// function differ($beforeTree, $afterTree)
+// {
+//   $res = array_map(
+//     function ($beforeItem) use($afterTree) {
+//       return array_map(
+//       function ($afterItem) use($beforeItem){
+//         if ($afterItem['name'] == $beforeItem['name'] &&
+//           $afterItem['meta']['value'] == $beforeItem['meta']['value']
+//         ) {
+//           return $afterItem;
+//         }
+//       },
+//       $afterTree
+//       );
+//     },
+//     $beforeTree
+//   );
+//   return $res;
+// }
 
-print_r(differ($beforeTree, $afterTree));
+// print_r(differ($beforeTree, $afterTree));

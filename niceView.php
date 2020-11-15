@@ -26,24 +26,23 @@ function formatic($arr)
     $deep = 0;
     function test($arr, $deep = 0)
     {
-      global $deep;
-      $sep = str_repeat('.', $deep);
-      $res = "{\n";
-      foreach ($arr as $key => $val) {
-        if (is_array($val)) {
-            $tmp = test($val, $deep += 1);
-            $res .= $sep . $key . " : " . $tmp;
-        } else {
-            $res .= $sep . $key . " : " . $val . "\n";
+        global $deep;
+        $sep = str_repeat('    ', $deep);
+        $res = "{\n";
+        foreach ($arr as $key => $val) {
+            if (is_array($val)) {
+                $tmp = test($val, $deep += 1);
+                $res .= $sep . $key . " : " . $tmp;
+            } else {
+                $res .= $sep . $key . " : " . $val . "\n";
+            }
         }
-        
-      }
-    if($deep > 1){
-      $deep = 0;
-      return $res . $sep . "}\n";
+        if ($deep > 1) {
+            $deep = 0;
+            return $res . $sep . "}\n";
+        }
+        return $res . $sep . "}\n";
     }
-      return $res . $sep . "}\n";
-    }  
     return test($arr);
 }
 
@@ -54,15 +53,15 @@ print_r(formatic($arr));
 
 function nbsp($deep)
 {
-  $res = "";
-  $nbsp = "    ";
-  if ($deep <= 1) {
-    return "";
-  }
-  for ($i = 1; $i < $deep; $i++) {
-    $res .= $nbsp;
-  }
-  return $res;
+    $res = "";
+    $nbsp = "    ";
+    if ($deep <= 1) {
+        return "";
+    }
+    for ($i = 1; $i < $deep; $i++) {
+        $res .= $nbsp;
+    }
+    return $res;
 }
 
 // var_dump(nbsp(3));

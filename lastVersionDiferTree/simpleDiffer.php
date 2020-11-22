@@ -114,6 +114,21 @@ $testAfterDeep = '{
     }
   }';
 
+function transformToArrAndPath($tree, $path = "") // добавил путь к файлу от корня
+{
+    $res = [];
+  
+    foreach ($tree as $key => $val) {
+        if (is_object($val)) {
+            $res[] = ['name' => $key,  'type' => 'parent', 'path' => $path . '/' . $key, 'value' => transformToArrAndPath($val, $path . '/' . $key)];
+        } else {
+            $res[] = ['name' => $key, 'path' => $path . '/' . $key, 'value' => boolOrNullToString($val)];
+        }
+    }
+    return $res;
+}
+
+
 function transformToArr($tree)
 {
     $res = [];

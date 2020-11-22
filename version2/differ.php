@@ -47,7 +47,7 @@ function boolOrNullToString($data)
 $beforeTree = test($beforeTree);
 $afterTree = test($afterTree);
 
-// print_r($beforeTree);
+print_r($beforeTree);
 // print_r($afterTree);
 
 // пробую писать дифер функцию

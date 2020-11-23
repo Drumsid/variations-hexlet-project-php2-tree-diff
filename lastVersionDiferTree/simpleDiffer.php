@@ -1,6 +1,6 @@
 <?php
 
-// начал писать третий фариант дифа. осталось допидлить вывод вложенного json
+// начал писать третий фариант дифа. осталось допидлить group 1 nest = не выводит значение
 
 $deepTreeBefore = '{
   "host": "hexlet.io",
@@ -184,11 +184,17 @@ function differ($beforeTree, $afterTree, $res = [])
                 $beforeValue['status'] = 'changed';
                 $beforeValue['beforeValue'] = $beforeValue['value'];
                 $beforeValue['afterValue'] = $findName['value'];
-                unset($beforeValue['value']);
+                // if (array_key_exists('type', $findName)) {
+                //     $beforeValue['type'] = 'skip';
+                // }
+                // unset($beforeValue['value']);
                 $res[] = $beforeValue;
             }
         } else {
             $beforeValue['status'] = 'removed';
+            if (array_key_exists('type', $beforeValue)) {
+                $beforeValue['type'] = 'skip';
+            }
             $res[] = $beforeValue;
         }
     }
@@ -196,6 +202,9 @@ function differ($beforeTree, $afterTree, $res = [])
         $findName = findSameName($aftervalue, $beforeTree);
         if (! $findName) {
             $aftervalue['status'] = 'added';
+            if (array_key_exists('type', $aftervalue)) {
+                $aftervalue['type'] = 'skip';
+            }
             $res[] = $aftervalue;
         }
     }
@@ -231,10 +240,28 @@ $deepDeff = differ($arrDeepTreeBefore, $arrDeepTreeAfter);
 
 $objtestBeforeDeep = json_decode($testBeforeDeep);
 $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
+// print_r($arrtestBeforeDeep);
 
 $objtestAfterDeep = json_decode($testAfterDeep);
 $arrtestAfterDeep = transformToArr($objtestAfterDeep);
 $testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
+print_r($testdeepDeff);
+
+function test($arr){
+  if (! is_array($arr) || (array_key_exists('type', $arr) && $v['type'] == 'skip')) {
+    return $arr;
+  }  
+  $res = [];
+  foreach ($arr as $v) {
+        if (is_array($v) && array_key_exists('type', $v) && $v['type'] == 'parent'){
+        $res[$v['name']] = test($v['value']); 
+        } else {
+            $res[$v['name']] = $v['value'];
+        }
+    }
+    
+  return $res;
+}
 
 function xDif($diff)
 {
@@ -246,9 +273,9 @@ function xDif($diff)
             if (array_key_exists('status', $array) && $array['status'] == 'dontChange') {
                 $res['    ' . $array['name']] = $array['value'];
             } elseif (array_key_exists('status', $array) && $array['status'] == 'removed') {
-                $res['  - ' . $array['name']] = $array['value'];
+                $res['  - ' . $array['name']] = test($array['value']);
             } elseif (array_key_exists('status', $array) && $array['status'] == 'added') {
-                $res['  + ' . $array['name']] = $array['value'];
+                $res['  + ' . $array['name']] = test($array['value']);
             } elseif (array_key_exists('status', $array) && $array['status'] == 'changed') {
                 $res['  - ' . $array['name']] = $array['beforeValue'];
                 $res['  + ' . $array['name']] = $array['afterValue'];
@@ -259,7 +286,7 @@ function xDif($diff)
 }
 
 // print_r(xDif($simpleDiff));
-// print_r(xDif($deepDeff));
+print_r(xDif($testdeepDeff));
 
 function formatic($arr) // без глобал не работает, не пойму почему
 {
@@ -288,5 +315,7 @@ function niceView($arr, $deep = 0) // unit test ругался на то что 
 }
 
 // print_r(formatic(xDif($simpleDiff)));
-print_r(formatic(xDif($deepDeff)));
+// print_r(formatic(xDif($deepDeff)));
 // print_r(formatic(xDif($testdeepDeff)));
+
+

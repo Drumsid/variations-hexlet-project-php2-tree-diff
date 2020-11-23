@@ -197,8 +197,8 @@ function correctCurleBrackets($str, $delimiter)
     return $search;
 }
 // преобразуем из json в массив
-$before2 = json_decode($before, true);
-$after2 = json_decode($after, true);
+$before2 = json_decode($before2, true);
+$after2 = json_decode($after2, true);
 
 
 // парсим значения

@@ -1,6 +1,7 @@
 <?php
 
-// начал писать третий фариант дифа. осталось допидлить group 1 nest = не выводит значение
+// начал писать третий фариант дифа. осталось допидлить красивый вывод. не пойму как написать нормальную функцию. 
+// Сейчас все уперлось в то что doge не выводиться в нжном месте, точнее нет отступа
 
 $deepTreeBefore = '{
   "host": "hexlet.io",
@@ -50,69 +51,63 @@ $beforeTree = '{
 // print_r($objTree);
 
 $testBeforeDeep = '{
-    "a": 1,
-    "b": 2,
-    "d": 3,
-      "common": {
-      "setting1": "Value 1",
-      "setting2": 200,
-      "setting3": true,
-      "setting6": {
-        "key": "value",
-        "doge": {
-          "wow": ""
-        }
-      }
-    },
-    "group1": {
-      "baz": "bas",
-      "foo": "bar",
-      "nest": {
-        "key": "value"
-      }
-    },
-    "group2": {
-      "abc": 12345,
-      "deep": {
-        "id": 45
+  "common": {
+    "setting1": "Value 1",
+    "setting2": 200,
+    "setting3": true,
+    "setting6": {
+      "key": "value",
+      "doge": {
+        "wow": ""
       }
     }
-  }';
+  },
+  "group1": {
+    "baz": "bas",
+    "foo": "bar",
+    "nest": {
+      "key": "value"
+    }
+  },
+  "group2": {
+    "abc": 12345,
+    "deep": {
+      "id": 45
+    }
+  }
+}';
 
 $testAfterDeep = '{
-    "a": 1,
-    "b": null,
-    "z": "add",
-    "common": {
-      "follow": false,
-      "setting1": "Value 1",
-      "setting3": null,
-      "setting4": "blah blah",
-      "setting5": {
-        "key5": "value5"
-      },
-      "setting6": {
-        "key": "value",
-        "ops": "vops",
-        "doge": {
-          "wow": "so much"
-        }
-      }
+  "common": {
+    "follow": false,
+    "setting1": "Value 1",
+    "setting3": null,
+    "setting4": "blah blah",
+    "setting5": {
+      "key5": "value5"
     },
-    "group1": {
-      "foo": "bar",
-      "baz": "bars",
-      "nest": "str"
-    },
-    "group3": {
-      "fee": 100500,
-      "deep": {
-        "id": {
-          "number": 45
-        }
+    "setting6": {
+      "key": "value",
+      "ops": "vops",
+      "doge": {
+        "wow": "so much"
       }
     }
-  }';
+  },
+  "group1": {
+    "foo": "bar",
+    "baz": "bars",
+    "nest": "str"
+  },
+  "group3": {
+    "fee": 100500,
+    "deep": {
+      "id": {
+        "number": 45
+      }
+    }
+  }
+}';
 
 function transformToArrAndPath($tree, $path = "") // добавил путь к файлу от корня
 {
@@ -184,9 +179,9 @@ function differ($beforeTree, $afterTree, $res = [])
                 $beforeValue['status'] = 'changed';
                 $beforeValue['beforeValue'] = $beforeValue['value'];
                 $beforeValue['afterValue'] = $findName['value'];
-                // if (array_key_exists('type', $findName)) {
-                //     $beforeValue['type'] = 'skip';
-                // }
+                if (array_key_exists('type', $beforeValue)) {
+                    $beforeValue['type'] = 'skip';
+                }
                 // unset($beforeValue['value']);
                 $res[] = $beforeValue;
             }
@@ -254,9 +249,9 @@ function test($arr){
   $res = [];
   foreach ($arr as $v) {
         if (is_array($v) && array_key_exists('type', $v) && $v['type'] == 'parent'){
-        $res[$v['name']] = test($v['value']); 
+        $res["    " . $v['name']] = test($v['value']); 
         } else {
-            $res[$v['name']] = $v['value'];
+            $res["    " . $v['name']] = $v['value'];
         }
     }
     
@@ -277,8 +272,8 @@ function xDif($diff)
             } elseif (array_key_exists('status', $array) && $array['status'] == 'added') {
                 $res['  + ' . $array['name']] = test($array['value']);
             } elseif (array_key_exists('status', $array) && $array['status'] == 'changed') {
-                $res['  - ' . $array['name']] = $array['beforeValue'];
-                $res['  + ' . $array['name']] = $array['afterValue'];
+                $res['  - ' . $array['name']] = test($array['beforeValue']);
+                $res['  + ' . $array['name']] = test($array['afterValue']);
             }
         }
     }
@@ -314,8 +309,31 @@ function niceView($arr, $deep = 0) // unit test ругался на то что 
     return $res . $sep . "}\n";
 }
 
-// print_r(formatic(xDif($simpleDiff)));
-// print_r(formatic(xDif($deepDeff)));
-// print_r(formatic(xDif($testdeepDeff)));
+// print_r(out(json_encode(xDif($simpleDiff))));
+// print_r(out(json_encode(xDif($deepDeff))));
+print_r(formatic(xDif($testdeepDeff)));
 
 
+// function out($arr)
+// {
+//     $res = '';
+//     for ($i=0; $i < strlen($arr); $i++) { 
+//         if ($arr[$i] == "{" && $arr[$i + 1] == "\"") {
+//             $res .= $arr[$i] . "\n";
+//             $i++;
+//         } else if($arr[$i] == "\"" && $arr[$i + 1] == "}"){
+//             $res .= "\n}";
+//             $i++;
+//         }
+//         else if($arr[$i] == "\""){
+//             $res .= "";
+//         }
+//         else if($arr[$i] == "," && $arr[$i + 1] == "\"") {
+//             $res .= "\n";
+//             $i++;
+//         }else {
+//             $res .= $arr[$i];
+//         }
+//     }
+//     return $res;
+// }

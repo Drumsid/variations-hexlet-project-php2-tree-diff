@@ -240,7 +240,7 @@ $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
 $objtestAfterDeep = json_decode($testAfterDeep);
 $arrtestAfterDeep = transformToArr($objtestAfterDeep);
 $testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
-print_r($testdeepDeff);
+// print_r($testdeepDeff);
 
 function test($arr){
   if (! is_array($arr) || (array_key_exists('type', $arr) && $v['type'] == 'skip')) {
@@ -281,7 +281,7 @@ function xDif($diff)
 }
 
 // print_r(xDif($simpleDiff));
-print_r(xDif($testdeepDeff));
+// print_r(xDif($testdeepDeff));
 
 function formatic($arr) // без глобал не работает, не пойму почему
 {
@@ -291,21 +291,22 @@ function formatic($arr) // без глобал не работает, не по�
 }
 function niceView($arr, $deep = 0) // unit test ругался на то что эту функцию обьявил внутри другой
 {
-    global $deep;
+    // global $deep;
+    // $mult = $deep;
     $sep = str_repeat('    ', $deep);
     $res = "{\n";
     foreach ($arr as $key => $val) {
         if (is_array($val)) {
-            $tmp = niceView($val, $deep += 1);
+            $tmp = niceView($val, $deep + 1);
             $res .= $sep . $key . " : " . $tmp;
         } else {
             $res .= $sep . $key . " : " . $val . "\n";
         }
     }
-    if ($deep > 1) {
-        $deep = 0;
-        return $res . $sep . "}\n";
-    }
+    // if ($deep > 1) {
+    //     $deep = 0;
+    //     return $res . $sep . "}\n";
+    // }
     return $res . $sep . "}\n";
 }
 

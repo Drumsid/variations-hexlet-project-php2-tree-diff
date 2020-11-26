@@ -1,6 +1,6 @@
 <?php
 
-// начал писать третий фариант дифа. осталось допидлить красивый вывод. не пойму как написать нормальную функцию. 
+// начал писать третий фариант дифа. осталось допидлить красивый вывод. не пойму как написать нормальную функцию.
 // Сейчас все уперлось в то что doge не выводиться в нжном месте, точнее нет отступа
 
 $deepTreeBefore = '{
@@ -233,7 +233,7 @@ function differ($beforeTree, $afterTree, $res = [])
 
 // ========================= test deep deff ================================
 
-$objtestBeforeDeep = json_decode($testBeforeDeep); 
+$objtestBeforeDeep = json_decode($testBeforeDeep);
 $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
 // var_dump($objtestBeforeDeep);
 // var_dump($arrtestBeforeDeep);
@@ -243,20 +243,21 @@ $arrtestAfterDeep = transformToArr($objtestAfterDeep);
 $testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
 // print_r($testdeepDeff);
 
-function test($arr){
-  if (! is_array($arr) || (array_key_exists('type', $arr) && $v['type'] == 'skip')) {
-    return $arr;
-  }  
-  $res = [];
-  foreach ($arr as $v) {
-        if (is_array($v) && array_key_exists('type', $v) && $v['type'] == 'parent'){
-        $res["    " . $v['name']] = test($v['value']); 
+function correctStructure($arr)
+{
+    if (! is_array($arr) || (array_key_exists('type', $arr) && $v['type'] == 'skip')) {
+        return $arr;
+    }
+    $res = [];
+    foreach ($arr as $v) {
+        if (is_array($v) && array_key_exists('type', $v) && $v['type'] == 'parent') {
+            $res["    " . $v['name']] = correctStructure($v['value']);
         } else {
             $res["    " . $v['name']] = $v['value'];
         }
     }
     
-  return $res;
+    return $res;
 }
 
 function xDif($diff)
@@ -269,12 +270,12 @@ function xDif($diff)
             if (array_key_exists('status', $array) && $array['status'] == 'dontChange') {
                 $res['    ' . $array['name']] = $array['value'];
             } elseif (array_key_exists('status', $array) && $array['status'] == 'removed') {
-                $res['  - ' . $array['name']] = test($array['value']);
+                $res['  - ' . $array['name']] = correctStructure($array['value']);
             } elseif (array_key_exists('status', $array) && $array['status'] == 'added') {
-                $res['  + ' . $array['name']] = test($array['value']);
+                $res['  + ' . $array['name']] = correctStructure($array['value']);
             } elseif (array_key_exists('status', $array) && $array['status'] == 'changed') {
-                $res['  - ' . $array['name']] = test($array['beforeValue']);
-                $res['  + ' . $array['name']] = test($array['afterValue']);
+                $res['  - ' . $array['name']] = correctStructure($array['beforeValue']);
+                $res['  + ' . $array['name']] = correctStructure($array['afterValue']);
             }
         }
     }
@@ -285,7 +286,7 @@ function xDif($diff)
 // print_r(xDif($testdeepDeff));
 
 
-function niceView($arr, $deep = 0) 
+function niceView($arr, $deep = 0)
 {
     $sep = str_repeat('    ', $deep);
     $res = "{\n";
@@ -309,7 +310,7 @@ print_r(niceView(xDif($testdeepDeff)));
 // function out($arr)
 // {
 //     $res = '';
-//     for ($i=0; $i < strlen($arr); $i++) { 
+//     for ($i=0; $i < strlen($arr); $i++) {
 //         if ($arr[$i] == "{" && $arr[$i + 1] == "\"") {
 //             $res .= $arr[$i] . "\n";
 //             $i++;

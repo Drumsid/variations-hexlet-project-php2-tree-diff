@@ -213,29 +213,30 @@ function differ($beforeTree, $afterTree, $res = [])
 }
 // ========================= simple deff ================================
 
-$objBeforeTree = json_decode($beforeTree);
-$arrBeforeTree = transformToArr($objBeforeTree);
+// $objBeforeTree = json_decode($beforeTree);
+// $arrBeforeTree = transformToArr($objBeforeTree);
 
-$objAfterTree  = json_decode($afterTree);
-$arrAfterTree = transformToArr($objAfterTree);
+// $objAfterTree  = json_decode($afterTree);
+// $arrAfterTree = transformToArr($objAfterTree);
 // print_r(transformToArr($objBeforeTree));
 // print_r(transformToArr($objAfterTree));
-$simpleDiff = differ($arrBeforeTree, $arrAfterTree);
+// $simpleDiff = differ($arrBeforeTree, $arrAfterTree);
 
 // ========================= deep deff ================================
 
-$objDeepTreeBefore = json_decode($deepTreeBefore);
-$arrDeepTreeBefore = transformToArr($objDeepTreeBefore);
+// $objDeepTreeBefore = json_decode($deepTreeBefore);
+// $arrDeepTreeBefore = transformToArr($objDeepTreeBefore);
 
-$objDeepTreeAfter = json_decode($deepTreeAfter);
-$arrDeepTreeAfter = transformToArr($objDeepTreeAfter);
-$deepDeff = differ($arrDeepTreeBefore, $arrDeepTreeAfter);
+// $objDeepTreeAfter = json_decode($deepTreeAfter);
+// $arrDeepTreeAfter = transformToArr($objDeepTreeAfter);
+// $deepDeff = differ($arrDeepTreeBefore, $arrDeepTreeAfter);
 
 // ========================= test deep deff ================================
 
-$objtestBeforeDeep = json_decode($testBeforeDeep);
+$objtestBeforeDeep = json_decode($testBeforeDeep); 
 $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
-// print_r($arrtestBeforeDeep);
+// var_dump($objtestBeforeDeep);
+// var_dump($arrtestBeforeDeep);
 
 $objtestAfterDeep = json_decode($testAfterDeep);
 $arrtestAfterDeep = transformToArr($objtestAfterDeep);
@@ -283,16 +284,9 @@ function xDif($diff)
 // print_r(xDif($simpleDiff));
 // print_r(xDif($testdeepDeff));
 
-function formatic($arr) // без глобал не работает, не пойму почему
-{
-    $deep = 0;
 
-    return niceView($arr);
-}
-function niceView($arr, $deep = 0) // unit test ругался на то что эту функцию обьявил внутри другой
+function niceView($arr, $deep = 0) 
 {
-    // global $deep;
-    // $mult = $deep;
     $sep = str_repeat('    ', $deep);
     $res = "{\n";
     foreach ($arr as $key => $val) {
@@ -303,16 +297,13 @@ function niceView($arr, $deep = 0) // unit test ругался на то что 
             $res .= $sep . $key . " : " . $val . "\n";
         }
     }
-    // if ($deep > 1) {
-    //     $deep = 0;
-    //     return $res . $sep . "}\n";
-    // }
     return $res . $sep . "}\n";
 }
 
 // print_r(out(json_encode(xDif($simpleDiff))));
 // print_r(out(json_encode(xDif($deepDeff))));
-print_r(formatic(xDif($testdeepDeff)));
+
+print_r(niceView(xDif($testdeepDeff)));
 
 
 // function out($arr)

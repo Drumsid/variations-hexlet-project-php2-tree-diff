@@ -42,12 +42,6 @@ $beforeTree = '{
     "verbose": true,
     "host": "hexlet.io"
   }';
-
-
-
-
-
-
 // print_r($objTree);
 
 $testBeforeDeep = '{
@@ -213,14 +207,16 @@ function differ($beforeTree, $afterTree, $res = [])
 }
 // ========================= simple deff ================================
 
-// $objBeforeTree = json_decode($beforeTree);
-// $arrBeforeTree = transformToArr($objBeforeTree);
+$objBeforeTree = json_decode($beforeTree);
+$arrBeforeTree = transformToArr($objBeforeTree);
 
-// $objAfterTree  = json_decode($afterTree);
-// $arrAfterTree = transformToArr($objAfterTree);
+$objAfterTree  = json_decode($afterTree);
+$arrAfterTree = transformToArr($objAfterTree);
 // print_r(transformToArr($objBeforeTree));
 // print_r(transformToArr($objAfterTree));
-// $simpleDiff = differ($arrBeforeTree, $arrAfterTree);
+$simpleDiff = differ($arrBeforeTree, $arrAfterTree);
+$difJson = json_encode(xDif($simpleDiff));
+print_r(niceOutJson($difJson));
 
 // ========================= deep deff ================================
 
@@ -233,14 +229,14 @@ function differ($beforeTree, $afterTree, $res = [])
 
 // ========================= test deep deff ================================
 
-$objtestBeforeDeep = json_decode($testBeforeDeep);
-$arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
+// $objtestBeforeDeep = json_decode($testBeforeDeep);
+// $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
 // var_dump($objtestBeforeDeep);
 // var_dump($arrtestBeforeDeep);
 
-$objtestAfterDeep = json_decode($testAfterDeep);
-$arrtestAfterDeep = transformToArr($objtestAfterDeep);
-$testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
+// $objtestAfterDeep = json_decode($testAfterDeep);
+// $arrtestAfterDeep = transformToArr($objtestAfterDeep);
+// $testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
 // print_r($testdeepDeff);
 
 function correctStructure($arr)
@@ -304,29 +300,23 @@ function niceView($arr, $deep = 0)
 // print_r(out(json_encode(xDif($simpleDiff))));
 // print_r(out(json_encode(xDif($deepDeff))));
 
-print_r(niceView(xDif($testdeepDeff)));
+// print_r(niceView(xDif($testdeepDeff)));
 
-
-// function out($arr)
-// {
-//     $res = '';
-//     for ($i=0; $i < strlen($arr); $i++) {
-//         if ($arr[$i] == "{" && $arr[$i + 1] == "\"") {
-//             $res .= $arr[$i] . "\n";
-//             $i++;
-//         } else if($arr[$i] == "\"" && $arr[$i + 1] == "}"){
-//             $res .= "\n}";
-//             $i++;
-//         }
-//         else if($arr[$i] == "\""){
-//             $res .= "";
-//         }
-//         else if($arr[$i] == "," && $arr[$i + 1] == "\"") {
-//             $res .= "\n";
-//             $i++;
-//         }else {
-//             $res .= $arr[$i];
-//         }
-//     }
-//     return $res;
-// }
+function niceOutJson($json)
+{
+    $res = "";
+    for ($i=0; $i < strlen($json); $i++) { 
+        if($json[$i] == '{' && $json[$i + 1] == '"'){
+            $res .= $json[$i] . "\n" . $json[$i + 1];
+            $i++;
+        } elseif ($json[$i] == '"' && $json[$i + 1] == '}') {
+            $res .= $json[$i] . "\n" . $json[$i + 1];
+            $i++;
+        } elseif ($json[$i] == ',') {
+            $res .= "\n";
+        } else {
+            $res .= $json[$i];
+        }
+    }
+    return $res;
+}

@@ -6,9 +6,9 @@ function transformToArrAndPath($tree, $path = "") // добавил путь к 
   
     foreach ($tree as $key => $val) {
         if (is_object($val)) {
-            $res[] = ['name' => $key,  'type' => 'parent', 'path' => $path . '/' . $key, 'value' => transformToArrAndPath($val, $path . '/' . $key)];
+            $res[] = ['name' => $key,  'type' => 'parent', 'path' => $path . '.' . $key, 'value' => transformToArrAndPath($val, $path . '.' . $key)];
         } else {
-            $res[] = ['name' => $key, 'path' => $path . '/' . $key, 'value' => boolOrNullToString($val)];
+            $res[] = ['name' => $key, 'path' => $path . '.' . $key, 'value' => boolOrNullToString($val)];
         }
     }
     return $res;
@@ -131,23 +131,41 @@ function xDif($diff)
     return $res;
 }
 
-function plain($arr)
+function collectPathArr($arr)
 {
-    $res = "";
+    $res = [];
     foreach ($arr as $key => $value) {
-        if (array_key_exists('plain', $value) && $value['status'] == 'changed') {
-            $res .= "Property " . $value['path'] . " was updated. From " . $value['beforeValue'] . " to "  . $value['afterValue'] . ".\n";
+        if (array_key_exists('type', $value) && $value['type'] == 'parent') {
+            $tmp = collectPathArr($value['value']);
+            $res = array_merge($res, $tmp); 
+        } else {
+            if (array_key_exists('plain', $value) && $value['status'] == 'changed') {
+                $res[] = "Property '" . substr($value['path'], 1) . "' was updated. From " . checkArray($value['beforeValue']) . " to "  . checkArray($value['afterValue']) . ".";
+            }
+            if (array_key_exists('plain', $value) && $value['status'] == 'removed') {
+                $res[] = "Property '" . substr($value['path'], 1) . "' was removed.";
+            }
+            if (array_key_exists('plain', $value) && $value['status'] == 'added') {
+                $res[] = "Property '" . substr($value['path'], 1) . "' was added with value: " . checkArray($value['value']) . ".";
+            }
         }
-        if (array_key_exists('plain', $value) && $value['status'] == 'removed') {
-            $res .= "Property " . $value['path'] . " was removed.\n";
-        }
-        if (array_key_exists('plain', $value) && $value['status'] == 'added') {
-            $res .= "Property " . $value['path'] . " was added with value: " . $value['value'] . ".\n";
-        }
+
     }
     return $res;
 }
 
+function checkArray ($val)
+{
+    if (is_array($val)) {
+        return "[complex value]";
+    }
+    return "'" . $val . "'";
+}
+
+function plain($arr)
+{
+    return implode("\n", collectPathArr($arr));
+}
 $beforeTree = '{
     "host": "hexlet.io",
     "timeout": 50,
@@ -170,3 +188,75 @@ $diffArr = differ($beforeArr, $afterArr);
 
 $plained = plain($diffArr);
 print_r($plained);
+
+// ==============================================
+
+$testBeforeDeep = '{
+  "common": {
+    "setting1": "Value 1",
+    "setting2": 200,
+    "setting3": true,
+    "setting6": {
+      "key": "value",
+      "doge": {
+        "wow": ""
+      }
+    }
+  },
+  "group1": {
+    "baz": "bas",
+    "foo": "bar",
+    "nest": {
+      "key": "value"
+    }
+  },
+  "group2": {
+    "abc": 12345,
+    "deep": {
+      "id": 45
+    }
+  }
+}';
+
+$testAfterDeep = '{
+  "common": {
+    "follow": false,
+    "setting1": "Value 1",
+    "setting3": null,
+    "setting4": "blah blah",
+    "setting5": {
+      "key5": "value5"
+    },
+    "setting6": {
+      "key": "value",
+      "ops": "vops",
+      "doge": {
+        "wow": "so much"
+      }
+    }
+  },
+  "group1": {
+    "foo": "bar",
+    "baz": "bars",
+    "nest": "str"
+  },
+  "group3": {
+    "fee": 100500,
+    "deep": {
+      "id": {
+        "number": 45
+      }
+    }
+  }
+}';
+
+$deepBeforeArr = transformToArrAndPath(json_decode($testBeforeDeep));
+$deepAfterArr = transformToArrAndPath(json_decode($testAfterDeep));
+// print_r($deepBeforeArr);
+// print_r($deepAfterArr);
+
+$deepDiffArr = differ($deepBeforeArr, $deepAfterArr);
+// print_r($deepDiffArr);
+
+$deeepPlained = plain($deepDiffArr);
+print_r($deeepPlained);

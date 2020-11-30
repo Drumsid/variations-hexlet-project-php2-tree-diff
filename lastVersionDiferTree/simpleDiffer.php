@@ -215,29 +215,30 @@ $arrAfterTree = transformToArr($objAfterTree);
 // print_r(transformToArr($objBeforeTree));
 // print_r(transformToArr($objAfterTree));
 $simpleDiff = differ($arrBeforeTree, $arrAfterTree);
-$difJson = json_encode(xDif($simpleDiff));
-print_r(niceOutJson($difJson));
+// $difJson = json_encode(xDif($simpleDiff));
+print_r(niceJsonView(xDif($simpleDiff)));
 
 // ========================= deep deff ================================
 
-// $objDeepTreeBefore = json_decode($deepTreeBefore);
-// $arrDeepTreeBefore = transformToArr($objDeepTreeBefore);
+$objDeepTreeBefore = json_decode($deepTreeBefore);
+$arrDeepTreeBefore = transformToArr($objDeepTreeBefore);
 
-// $objDeepTreeAfter = json_decode($deepTreeAfter);
-// $arrDeepTreeAfter = transformToArr($objDeepTreeAfter);
-// $deepDeff = differ($arrDeepTreeBefore, $arrDeepTreeAfter);
-
+$objDeepTreeAfter = json_decode($deepTreeAfter);
+$arrDeepTreeAfter = transformToArr($objDeepTreeAfter);
+$deepDeff = differ($arrDeepTreeBefore, $arrDeepTreeAfter);
+// print_r(niceJsonView(xDif($deepDeff)));
 // ========================= test deep deff ================================
 
-// $objtestBeforeDeep = json_decode($testBeforeDeep);
-// $arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
+$objtestBeforeDeep = json_decode($testBeforeDeep);
+$arrtestBeforeDeep = transformToArr($objtestBeforeDeep);
 // var_dump($objtestBeforeDeep);
 // var_dump($arrtestBeforeDeep);
 
-// $objtestAfterDeep = json_decode($testAfterDeep);
-// $arrtestAfterDeep = transformToArr($objtestAfterDeep);
-// $testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
-// print_r($testdeepDeff);
+$objtestAfterDeep = json_decode($testAfterDeep);
+$arrtestAfterDeep = transformToArr($objtestAfterDeep);
+$testdeepDeff = differ($arrtestBeforeDeep, $arrtestAfterDeep);
+// print_r(jsonniceJsonView(xDif($testdeepDeff)));
+
 
 function correctStructure($arr)
 {
@@ -282,16 +283,24 @@ function xDif($diff)
 // print_r(xDif($testdeepDeff));
 
 
-function niceView($arr, $deep = 0)
+function niceJsonView($arr, $deep = 0)
 {
     $sep = str_repeat('    ', $deep);
     $res = "{\n";
+    $last = count($arr) - 1;
+    $count = 0;
     foreach ($arr as $key => $val) {
         if (is_array($val)) {
-            $tmp = niceView($val, $deep + 1);
-            $res .= $sep . $key . " : " . $tmp;
+            $tmp = niceJsonView($val, $deep + 1);
+            $res .= $sep . "\"" . $key . "\" : " . $tmp;
+            $count++;
         } else {
-            $res .= $sep . $key . " : " . $val . "\n";
+            if ($count == $last) {
+                $res .= $sep . "\"" . $key . "\" : " . "\"" . $val . "\"\n";
+            } else {
+                $res .= $sep . "\"" . $key . "\" : " . "\"" . $val . "\",\n";
+                $count++;
+            }
         }
     }
     return $res . $sep . "}\n";
@@ -300,23 +309,23 @@ function niceView($arr, $deep = 0)
 // print_r(out(json_encode(xDif($simpleDiff))));
 // print_r(out(json_encode(xDif($deepDeff))));
 
-// print_r(niceView(xDif($testdeepDeff)));
+// print_r(niceJsonView(xDif($testdeepDeff)));
 
-function niceOutJson($json)
-{
-    $res = "";
-    for ($i=0; $i < strlen($json); $i++) { 
-        if($json[$i] == '{' && $json[$i + 1] == '"'){
-            $res .= $json[$i] . "\n" . $json[$i + 1];
-            $i++;
-        } elseif ($json[$i] == '"' && $json[$i + 1] == '}') {
-            $res .= $json[$i] . "\n" . $json[$i + 1];
-            $i++;
-        } elseif ($json[$i] == ',') {
-            $res .= "\n";
-        } else {
-            $res .= $json[$i];
-        }
-    }
-    return $res;
-}
+// function niceOutJson($json)
+// {
+//     $res = "";
+//     for ($i=0; $i < strlen($json); $i++) {
+//         if($json[$i] == '{' && $json[$i + 1] == '"'){
+//             $res .= $json[$i] . "\n" . $json[$i + 1];
+//             $i++;
+//         } elseif ($json[$i] == '"' && $json[$i + 1] == '}') {
+//             $res .= $json[$i] . "\n" . $json[$i + 1];
+//             $i++;
+//         } elseif ($json[$i] == ',') {
+//             $res .= "\n";
+//         } else {
+//             $res .= $json[$i];
+//         }
+//     }
+//     return $res;
+// }

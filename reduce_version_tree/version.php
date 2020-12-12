@@ -81,8 +81,8 @@ $dAfterArr = transformToArr(json_decode($dAfter));
 
 function reduce_differ($beforeTree, $afterTree)
 {
-    $comparedData = array_reduce($beforeTree, function ($acc, $before) use($afterTree) {
-    $after = findSameName($before, $afterTree);
+    $comparedData = array_reduce($beforeTree, function ($acc, $before) use ($afterTree) {
+        $after = findSameName($before, $afterTree);
         if ($after) {
             if (
                 ($before['name'] == $after['name']) && array_key_exists('type', $after) &&
@@ -90,11 +90,10 @@ function reduce_differ($beforeTree, $afterTree)
             ) {
                 $before['value'] = reduce_differ($before['value'], $after['value']);
                 $acc[] = $before;
-            } else if (($before['name'] == $after['name']) && ($before['value'] == $after['value'])){
+            } elseif (($before['name'] == $after['name']) && ($before['value'] == $after['value'])) {
                 $before['status'] = 'dontChange';
                 $before['plain'] = 'plain';
                 $acc[] = $before;
-                        
             } elseif (($before['name'] == $after['name']) && ($before['value'] != $after['value'])) {
                 $before['status'] = 'changed';
                 $before['plain'] = 'plain';
@@ -111,20 +110,20 @@ function reduce_differ($beforeTree, $afterTree)
             if (array_key_exists('type', $before)) {
                 $before['type'] = 'skip';
             }
-            $acc[] = $before;        
+            $acc[] = $before;
         }
         return $acc;
     }, []);
 
-    $result = array_reduce($afterTree, function ($acc, $after) use($beforeTree) {
-    $find = findSameName($after, $beforeTree);
+    $result = array_reduce($afterTree, function ($acc, $after) use ($beforeTree) {
+        $find = findSameName($after, $beforeTree);
         if (! $find) {
             $after['status'] = 'added';
             $after['plain'] = 'plain';
             if (array_key_exists('type', $after)) {
                 $after['type'] = 'skip';
             }
-            $acc[] = $after;        
+            $acc[] = $after;
         }
         return $acc;
     }, $comparedData);
@@ -136,11 +135,12 @@ function reduce_differ($beforeTree, $afterTree)
         return ($item1['name'] < $item2['name']) ? -1 : 1;
     });
 
-  return $result;
+    return $result;
 }
 
 
 // print_r($beforeArr);
 // print_r(reduce_differ($dBeforeArr, $dAfterArr));
 // print_r(deepDiff($dBeforeArr, $dAfterArr));
-var_dump(reduce_differ($dBeforeArr, $dAfterArr) == deepDiff($dBeforeArr, $dAfterArr));
+// var_dump(reduce_differ($dBeforeArr, $dAfterArr) == deepDiff($dBeforeArr, $dAfterArr));
+print_r(reduce_differ($beforeArr, $afterArr));

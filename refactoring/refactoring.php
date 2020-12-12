@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../reduce_version_tree/lib.php';
+require_once __DIR__ . '/newLib.php';
 $autoloadPath1 = __DIR__ . '/../../../autoload.php';
 $autoloadPath2 = __DIR__ . '/../vendor/autoload.php';
 if (file_exists($autoloadPath1)) {
@@ -18,9 +19,9 @@ $before = '{
     "follow": false
   }';
 $after = '{
-"timeout": 20,
-"verbose": true,
-"host": "hexlet.io"
+    "timeout": 20,
+    "verbose": true,
+    "host": "hexlet.io"
 }';
 $objBefore = json_decode($before);
 $objAfter = json_decode($after);
@@ -59,14 +60,17 @@ function myBuilder($objBefore, $objAfter)
             ];
         }
     }, $unicKey);
+    usort($res, function ($item1, $item2) {
+        if ($item1['name'] == $item2['name']) {
+            return 0;
+        }
+        return ($item1['name'] < $item2['name']) ? -1 : 1;
+    });
     return $res;
 }
-// print_r(get_object_vars($objBefore));
-// print_r(get_object_vars($objAfter));
-// print_r(array_keys(union(get_object_vars($objBefore), get_object_vars($objAfter))));
-// $test = 'host';
-// if (property_exists($objBefore, $test)) {
-//     print_r($objBefore->$test);
-// }
 
-print_r(myBuilder($objBefore, $objAfter));
+$tree = myBuilder($objBefore, $objAfter);
+
+$json = json_encode(xDif($tree));
+
+// print_r(str_replace(["{\"", '","', ',"'], ["{\n", "\n", "\n"], $json));

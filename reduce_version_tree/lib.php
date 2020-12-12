@@ -51,4 +51,3 @@ function findSameName($findArr, $dataArrs)
     }
     return false;
 }
-

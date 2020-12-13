@@ -1,6 +1,7 @@
 <?php
 
-// не работает сравнение вложенных json
+// надо фиксть transformObjectToArr чтоб корректно преобразовывала в массив, пока пропускает некоторые элементы
+// и именования в ней же фиксит.
 
 require_once __DIR__ . '/../reduce_version_tree/lib.php';
 require_once __DIR__ . '/newLib.php';
@@ -92,16 +93,16 @@ $deepObjAfter = json_decode($dAfter);
   
 function myBuilder($objBefore, $objAfter)
 {
-    print_r(111);
-    $unicKey = array_keys(union(get_object_vars($objBefore), get_object_vars($objAfter)));
-    print_r(222);
+    $unicKey = union(array_keys(get_object_vars($objBefore)), array_keys(get_object_vars($objAfter)));
+
     $res = array_map(function ($key) use ($objBefore, $objAfter) {
+        // если вложенность запускается это условие
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && is_object($objBefore->$key) && is_object($objAfter->$key)) {
-            // return [
-            //     'name' => $key,
-            //     'status' => 'nested',
-            //     'value' => myBuilder($objBefore->$key, $objAfter->$key)
-            // ];
+            return [
+                'name' => $key,
+                'status' => 'nested',
+                'value' => myBuilder($objBefore->$key, $objAfter->$key)
+            ];
             // print_r($objBefore->$key);
         }
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && ($objBefore->$key == $objAfter->$key)) {
@@ -115,22 +116,22 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'changed',
-                'valueBefore' => boolOrNullToString($objBefore->$key),
-                'valueAfter' => boolOrNullToString($objAfter->$key)
+                'valueBefore' => transformObjectToArr(boolOrNullToString($objBefore->$key)),
+                'valueAfter' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
         }
         if (property_exists($objBefore, $key) && ! property_exists($objAfter, $key)) {
             return [
                 'name' => $key,
                 'status' => 'removed',
-                'value' => boolOrNullToString($objBefore->$key)
+                'value' => transformObjectToArr(boolOrNullToString($objBefore->$key))
             ];
         }
         if (! property_exists($objBefore, $key) && property_exists($objAfter, $key)) {
             return [
                 'name' => $key,
                 'status' => 'added',
-                'value' => boolOrNullToString($objAfter->$key)
+                'value' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
         }
     }, $unicKey);
@@ -144,12 +145,34 @@ function myBuilder($objBefore, $objAfter)
     return $res;
 }
 
-$tree = myBuilder($objBefore, $objAfter);
+$tree = myBuilder($deepObjBefore, $deepObjAfter);
 print_r($tree);
 // $json = json_encode(xDif($tree));
 
 // print_r(str_replace(["{\"", '","', ',"'], ["{\n", "\n", "\n"], $json));
 
-$test = get_object_vars(json_decode($dBefore));
+// $test = get_object_vars(json_decode($dBefore));
 
 // print_r(get_object_vars($test['group1']));
+
+
+function transformObjectToArr($arr)
+{
+    if (is_object($arr)) {
+        $arr = get_object_vars($arr);
+    } else {
+        return $arr;
+    }
+    $keys = array_keys($arr);
+    $res = array_reduce($keys, function ($acc, $key) use ($arr) {
+        if (is_object($arr[$key])) {
+            $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
+        } else {
+            $acc[$key] = $arr[$key];
+        }
+        return $acc;
+    }, []);
+    return $res;
+}
+
+// print_r(transformObjectToArr($tree[3]));

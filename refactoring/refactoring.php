@@ -1,7 +1,6 @@
 <?php
 
-// надо фиксть transformObjectToArr чтоб корректно преобразовывала в массив, пока пропускает некоторые элементы
-// и именования в ней же фиксит.
+// вроде пофиксил, теперь надо сделать рекурсивный вывод через formater для вложенных структур
 
 require_once __DIR__ . '/../reduce_version_tree/lib.php';
 require_once __DIR__ . '/newLib.php';
@@ -80,9 +79,9 @@ $dAfter = '{
     "group3": {
         "fee": 100500,
         "deep": {
-        "id": {
-            "number": 45
-        }
+            "id": {
+                "number": 45
+            }
         }
     }
 }';
@@ -166,7 +165,8 @@ function transformObjectToArr($arr)
     $keys = array_keys($arr);
     $res = array_reduce($keys, function ($acc, $key) use ($arr) {
         if (is_object($arr[$key])) {
-            $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
+            // $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
+            $acc[$key] = transformObjectToArr($arr[$key]);
         } else {
             $acc[$key] = $arr[$key];
         }

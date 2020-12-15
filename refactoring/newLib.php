@@ -4,24 +4,86 @@ const UNCHANGED = "    ";
 const PLUS = "  + ";
 const MINUS = "  - ";
 
-function formater($tree)
+function formaterExplode($arr, $deep = 0)
 {
-    $str = "{\n";
-    $res = array_reduce($tree, function ($acc, $item) {
-        if ($item['status'] == 'changed') {
-            $acc .= MINUS . $item['name'] . ": " . $item['valueBefore'] . "\n";
-            $acc .= PLUS . $item['name'] . ": " . $item['valueAfter'] . "\n";
-        } elseif ($item['status'] == 'unchanged') {
-            $acc .= UNCHANGED . $item['name'] . ": " . $item['value'] . "\n";
-        } elseif ($item['status'] == 'removed') {
-            $acc .= MINUS . $item['name'] . ": " . $item['value'] . "\n";
-        } elseif ($item['status'] == 'added') {
-            $acc .= PLUS . $item['name'] . ": " . $item['value'] . "\n";
+    $sep = str_repeat('    ', $deep);
+    $res = array_map(function ($item) use ($sep, $deep){
+        if($item['status'] == 'nested'){
+            $tmp = formaterExplode($item['value'], $deep + 1);
+            return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
         }
-        return $acc;
-    }, $str);
-    return $res . "}";
+        if ($item['status'] == 'unchanged') {
+            $tmp = arrToStr($item['value'], $deep + 1);
+            return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
+        }
+        if ($item['status'] == 'changed') {
+            $tempBefore = arrToStr($item['valueBefore'], $deep + 1);
+            $tempAfter = arrToStr($item['valueAfter'], $deep + 1);
+            return $sep . MINUS . $item['name'] . ": " . $tempBefore . "\n" . $sep . PLUS . $item['name'] . ": " . $tempAfter . "\n";
+        }
+        if ($item['status'] == 'removed') {
+            $tmp = arrToStr($item['value'], $deep + 1);
+            return $sep . MINUS . $item['name'] . ": " . $tmp . "\n";
+        }
+        if ($item['status'] == 'added') {
+            $tmp = arrToStr($item['value'], $deep + 1);
+            return $sep . PLUS . $item['name'] . ": " . $tmp . "\n";
+        }
+        if ($item['status'] == 'return') {
+            $tmp = arrToStr($item['value'], $deep + 1);
+            return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
+        }
+    }, $arr);
+        array_unshift($res, "{\n");
+        array_push($res, $sep . "}");
+    return implode($res);
 }
+
+function arrToStr($arr, $deep)
+{
+    if (is_array($arr)){
+        return formaterExplode($arr, $deep);
+    } else {
+        return $arr;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // function xDif($tree)
 // {

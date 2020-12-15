@@ -90,22 +90,25 @@ $objAfter = json_decode($after);
 $deepObjBefore = json_decode($dBefore);
 $deepObjAfter = json_decode($dAfter);
   
-function myBuilder($objBefore, $objAfter)
+function myBuilder($objBefore, $objAfter, $path = "")
 {
     $unicKey = union(array_keys(get_object_vars($objBefore)), array_keys(get_object_vars($objAfter)));
 
-    $res = array_map(function ($key) use ($objBefore, $objAfter) {
+    $res = array_map(function ($key) use ($objBefore, $objAfter, $path) {
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && is_object($objBefore->$key) && is_object($objAfter->$key)) {
             return [
                 'name' => $key,
                 'status' => 'nested',
-                'value' => myBuilder($objBefore->$key, $objAfter->$key)
+                'path' => $path . '.' . $key,
+                'value' => myBuilder($objBefore->$key, $objAfter->$key, $path . '.' . $key)
             ];
         }
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && ($objBefore->$key == $objAfter->$key)) {
             return [
                 'name' => $key,
                 'status' => 'unchanged',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => boolOrNullToString($objBefore->$key)
             ];
         }
@@ -113,6 +116,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'changed',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'valueBefore' => transformObjectToArr(boolOrNullToString($objBefore->$key)),
                 'valueAfter' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
@@ -121,6 +126,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'removed',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => transformObjectToArr(boolOrNullToString($objBefore->$key))
             ];
         }
@@ -128,6 +135,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'added',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
         }
@@ -145,11 +154,13 @@ function myBuilder($objBefore, $objAfter)
 // simple json
 $tree = myBuilder($objBefore, $objAfter);
 // print_r($tree);
+// print_r(plain($tree));
 // print_r(formaterExplode($tree));
 
 //deep json
 $deepTree = myBuilder($deepObjBefore, $deepObjAfter);
 // print_r($deepTree);
+// print_r(plain($deepTree));
 // print_r(formaterExplode($deepTree));
 
 function transformObjectToArr($obj)
@@ -194,9 +205,11 @@ $ymAfterDeep = Yaml::parse($dAfter,  Yaml::PARSE_OBJECT_FOR_MAP);
 //test yml simple
 $ymTree = myBuilder($ymBefore, $ymAfter);
 // print_r($ymTree);
+// print_r(plain($ymTree));
 // print_r(formaterExplode($ymTree));
 
 //test yml deep
 $ymTreeDeep = myBuilder($ymBeforeDeep, $ymAfterDeep);
 // print_r($ymTreeDeep);
-print_r(formaterExplode($ymTreeDeep));
+// print_r(plain($ymTreeDeep));
+// print_r(formaterExplode($ymTreeDeep));

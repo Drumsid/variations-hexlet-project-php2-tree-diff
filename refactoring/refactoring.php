@@ -156,23 +156,23 @@ print_r($tree);
 // print_r(get_object_vars($test['group1']));
 
 
-function transformObjectToArr($arr)
-{
-    if (is_object($arr)) {
-        $arr = get_object_vars($arr);
-    } else {
-        return $arr;
-    }
-    $keys = array_keys($arr);
-    $res = array_reduce($keys, function ($acc, $key) use ($arr) {
-        if (is_object($arr[$key])) {
-            $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
-        } else {
-            $acc[$key] = $arr[$key];
-        }
-        return $acc;
-    }, []);
-    return $res;
-}
+// function transformObjectToArr($arr)
+// {
+//     if (is_object($arr)) {
+//         $arr = get_object_vars($arr);
+//     } else {
+//         return $arr;
+//     }
+//     $keys = array_keys($arr);
+//     $res = array_reduce($keys, function ($acc, $key) use ($arr) {
+//         if (is_object($arr[$key])) {
+//             $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
+//         } else {
+//             $acc[$key] = $arr[$key];
+//         }
+//         return $acc;
+//     }, []);
+//     return $res;
+// }
 
 // print_r(transformObjectToArr($tree[3]));

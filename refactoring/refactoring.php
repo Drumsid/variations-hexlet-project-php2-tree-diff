@@ -1,8 +1,5 @@
 <?php
 
-// надо фиксть transformObjectToArr чтоб корректно преобразовывала в массив, пока пропускает некоторые элементы
-// и именования в ней же фиксит.
-
 require_once __DIR__ . '/../reduce_version_tree/lib.php';
 require_once __DIR__ . '/newLib.php';
 $autoloadPath1 = __DIR__ . '/../../../autoload.php';
@@ -14,6 +11,8 @@ if (file_exists($autoloadPath1)) {
 }
 
 use function Funct\Collection\union;
+
+use Symfony\Component\Yaml\Yaml;
 
 
 
@@ -80,9 +79,9 @@ $dAfter = '{
     "group3": {
         "fee": 100500,
         "deep": {
-        "id": {
-            "number": 45
-        }
+            "id": {
+                "number": 45
+            }
         }
     }
 }';
@@ -91,24 +90,25 @@ $objAfter = json_decode($after);
 $deepObjBefore = json_decode($dBefore);
 $deepObjAfter = json_decode($dAfter);
   
-function myBuilder($objBefore, $objAfter)
+function myBuilder($objBefore, $objAfter, $path = "")
 {
     $unicKey = union(array_keys(get_object_vars($objBefore)), array_keys(get_object_vars($objAfter)));
 
-    $res = array_map(function ($key) use ($objBefore, $objAfter) {
-        // если вложенность запускается это условие
+    $res = array_map(function ($key) use ($objBefore, $objAfter, $path) {
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && is_object($objBefore->$key) && is_object($objAfter->$key)) {
             return [
                 'name' => $key,
                 'status' => 'nested',
-                'value' => myBuilder($objBefore->$key, $objAfter->$key)
+                'path' => $path . '.' . $key,
+                'value' => myBuilder($objBefore->$key, $objAfter->$key, $path . '.' . $key)
             ];
-            // print_r($objBefore->$key);
         }
         if (property_exists($objBefore, $key) && property_exists($objAfter, $key) && ($objBefore->$key == $objAfter->$key)) {
             return [
                 'name' => $key,
                 'status' => 'unchanged',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => boolOrNullToString($objBefore->$key)
             ];
         }
@@ -116,6 +116,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'changed',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'valueBefore' => transformObjectToArr(boolOrNullToString($objBefore->$key)),
                 'valueAfter' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
@@ -124,6 +126,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'removed',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => transformObjectToArr(boolOrNullToString($objBefore->$key))
             ];
         }
@@ -131,6 +135,8 @@ function myBuilder($objBefore, $objAfter)
             return [
                 'name' => $key,
                 'status' => 'added',
+                'plain' => 'plain',
+                'path' => $path . '.' . $key,
                 'value' => transformObjectToArr(boolOrNullToString($objAfter->$key))
             ];
         }
@@ -145,17 +151,19 @@ function myBuilder($objBefore, $objAfter)
     return $res;
 }
 
-$tree = myBuilder($deepObjBefore, $deepObjAfter);
-print_r($tree);
-// $json = json_encode(xDif($tree));
+// simple json
+$tree = myBuilder($objBefore, $objAfter);
+// print_r($tree);
+// print_r(plain($tree));
+// print_r(formaterExplode($tree));
 
-// print_r(str_replace(["{\"", '","', ',"'], ["{\n", "\n", "\n"], $json));
+//deep json
+$deepTree = myBuilder($deepObjBefore, $deepObjAfter);
+// print_r($deepTree);
+// print_r(plain($deepTree));
+// print_r(formaterExplode($deepTree));
 
-// $test = get_object_vars(json_decode($dBefore));
-
-// print_r(get_object_vars($test['group1']));
-
-
+<<<<<<< HEAD
 // function transformObjectToArr($arr)
 // {
 //     if (is_object($arr)) {
@@ -174,5 +182,55 @@ print_r($tree);
 //     }, []);
 //     return $res;
 // }
+=======
+function transformObjectToArr($obj)
+{
+    if (is_object($obj)) {
+        $obj = get_object_vars($obj);
+    } else {
+        return $obj;
+    }
+    $keys = array_keys($obj);
+    $res = array_reduce($keys, function ($acc, $key) use ($obj) {
+        if (is_object($obj[$key])) {
+            $acc[] = [
+                'name' => $key,
+                'status' => 'return',
+                'value' => transformObjectToArr($obj[$key])              
+            ];
+        } else {
+            $acc[] = [
+                'name' => $key,
+                'status' => 'return',
+                'value' => $obj[$key]               
+            ];
+        }
+        return $acc;
+    }, []);
+    return $res;
+}
+>>>>>>> 32dff5dc6ee6caeb72b1704a479b721a32bbe0a2
 
-// print_r(transformObjectToArr($tree[3]));
+
+// yml test
+$ymBefore = Yaml::parse($before,  Yaml::PARSE_OBJECT_FOR_MAP);
+// var_dump($ymBefore);
+$ymAfter = Yaml::parse($after,  Yaml::PARSE_OBJECT_FOR_MAP);
+// var_dump($ymAfter);
+
+$ymBeforeDeep = Yaml::parse($dBefore,  Yaml::PARSE_OBJECT_FOR_MAP);
+// var_dump($ymBefore);
+$ymAfterDeep = Yaml::parse($dAfter,  Yaml::PARSE_OBJECT_FOR_MAP);
+// var_dump($ymAfter);
+
+//test yml simple
+$ymTree = myBuilder($ymBefore, $ymAfter);
+// print_r($ymTree);
+// print_r(plain($ymTree));
+// print_r(formaterExplode($ymTree));
+
+//test yml deep
+$ymTreeDeep = myBuilder($ymBeforeDeep, $ymAfterDeep);
+// print_r($ymTreeDeep);
+// print_r(plain($ymTreeDeep));
+// print_r(formaterExplode($ymTreeDeep));

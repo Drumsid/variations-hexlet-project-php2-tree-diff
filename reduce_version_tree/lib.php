@@ -22,19 +22,19 @@ function transformToArr($tree, $path = "")
     }
     return $res;
 }
-function boolOrNullToString($data)
-{
-    if (is_null($data)) {
-        return 'null';
-    }
-    if (is_bool($data) && $data === true) {
-        return 'true';
-    }
-    if (is_bool($data) && $data === false) {
-        return 'false';
-    }
-    return $data;
-}
+// function boolOrNullToString($data)
+// {
+//     if (is_null($data)) {
+//         return 'null';
+//     }
+//     if (is_bool($data) && $data === true) {
+//         return 'true';
+//     }
+//     if (is_bool($data) && $data === false) {
+//         return 'false';
+//     }
+//     return $data;
+// }
 function findSameName($findArr, $dataArrs)
 {
     if (! is_array($findArr) || ! is_array($dataArrs)) {

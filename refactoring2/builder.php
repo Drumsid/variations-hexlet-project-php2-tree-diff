@@ -210,42 +210,6 @@ function stylish($arr, $deep = 0)
 {
     $sep = str_repeat('    ', $deep);
     $res = array_map(function ($item) use ($sep, $deep) {
-        // if ($item['type'] == 'nested') {
-        //     $tmp = stylish($item['children'], $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'unchanged') {
-        //     $tmp = arrToStr($item['value'], $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'changed') {
-        //     // $tempBefore = arrToStr($item['valueBefore'], $deep + 1);
-        //     // $tempAfter = arrToStr($item['valueAfter'], $deep + 1);
-        //     $tempBefore = transformObjectToArr(boolOrNullToString($item['valueBefore']));
-        //     $tempBefore = arrToStr($tempBefore, $deep + 1);
-        //     $tempAfter = transformObjectToArr(boolOrNullToString($item['valueAfter']));
-        //     $tempAfter = arrToStr($tempAfter, $deep + 1);
-        //     return $sep . "  - " . $item['name'] . " : " . $tempBefore . "\n" . $sep .
-        //     "  + " . $item['name'] . " : " . $tempAfter . "\n";
-        // }
-        // if ($item['type'] == 'removed') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "  - " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'added') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "  + " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'return') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
         switch ($item['type']) {
             case 'nested':
                 $tmp = stylish($item['children'], $deep + 1);
@@ -274,7 +238,8 @@ function stylish($arr, $deep = 0)
                 return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
         }
     }, $arr);
-    return implode(addBrackets($res, $sep));
+    // return implode(addBrackets($res, $sep));
+    return addBrackets($res, $sep);  // начинай отсюда refactoring свой! нужно из функции stylish сделать наподобие plain
 }
 
 function arrToStr($arr, $deep)
@@ -336,8 +301,8 @@ function plain($arr)
 
 $tree = builder($objBefore, $objAfter);
 // print_r($tree);
-print_r(plain($tree));
-// print_r(stylish($tree));
+// print_r(plain($tree));
+print_r(stylish($tree));
 $dTree = builder($deepObjBefore, $deepObjAfter);
 // print_r($dTree);
 // print_r(plain($dTree));

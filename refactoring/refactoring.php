@@ -164,26 +164,6 @@ $deepTree = builder($deepObjBefore, $deepObjAfter);
 // print_r(plain($deepTree));
 // print_r(formater($deepTree));
 
-<<<<<<< HEAD
-// function transformObjectToArr($arr)
-// {
-//     if (is_object($arr)) {
-//         $arr = get_object_vars($arr);
-//     } else {
-//         return $arr;
-//     }
-//     $keys = array_keys($arr);
-//     $res = array_reduce($keys, function ($acc, $key) use ($arr) {
-//         if (is_object($arr[$key])) {
-//             $acc[$key] = transformObjectToArr(get_object_vars($arr[$key]));
-//         } else {
-//             $acc[$key] = $arr[$key];
-//         }
-//         return $acc;
-//     }, []);
-//     return $res;
-// }
-=======
 function transformObjectToArr($obj)
 {
     if (is_object($obj)) {
@@ -210,7 +190,6 @@ function transformObjectToArr($obj)
     }, []);
     return $res;
 }
->>>>>>> 32dff5dc6ee6caeb72b1704a479b721a32bbe0a2
 
 
 // yml test

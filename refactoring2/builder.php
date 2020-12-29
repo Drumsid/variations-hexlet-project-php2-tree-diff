@@ -188,6 +188,7 @@ $deepObjAfter = json_decode($dAfter);
 
 function stylish($arr, $depth = 0)
 {
+<<<<<<< HEAD
     $sep = str_repeat('    ', $depth);
     $res = array_map(function ($item) use ($sep, $depth) {
         $type = 'none';
@@ -195,6 +196,11 @@ function stylish($arr, $depth = 0)
             $type = $item['type'];
         }
         switch ($type) {
+=======
+    $sep = str_repeat('    ', $deep);
+    $res = array_map(function ($item) use ($sep, $deep) {
+        switch ($item['type']) {
+>>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
             case 'nested':
                 $children = stylish($item['children'], $depth + 1);
                 return $sep . "    " . $item['name'] . " : " . $children . "\n";
@@ -243,8 +249,13 @@ function testStr($arr, $sep)
             return $sep . "    " . $node['name'] . " : " . $node['value'] . "\n";
         }
     }, $arr);
+<<<<<<< HEAD
     // return implode($res);
     return implode(addBrackets($res, $sep));
+=======
+    // return implode(addBrackets($res, $sep));
+    return addBrackets($res, $sep);  // начинай отсюда refactoring свой! нужно из функции stylish сделать наподобие plain
+>>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
 }
 function arrToStr($arr, $depth)
 {
@@ -308,7 +319,11 @@ function plain($arr)
 $tree = builder($objBefore, $objAfter);
 // print_r($tree);
 // print_r(plain($tree));
+<<<<<<< HEAD
 // print_r(stylish($tree));
+=======
+print_r(stylish($tree));
+>>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
 $dTree = builder($deepObjBefore, $deepObjAfter);
 // print_r($dTree);
 // print_r(plain($dTree));

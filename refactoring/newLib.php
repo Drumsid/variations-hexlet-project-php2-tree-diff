@@ -4,45 +4,46 @@ const UNCHANGED = "    ";
 const PLUS = "  + ";
 const MINUS = "  - ";
 
-function formaterExplode($arr, $deep = 0)
+function formater($arr, $deep = 0)
 {
     $sep = str_repeat('    ', $deep);
     $res = array_map(function ($item) use ($sep, $deep){
-        if($item['status'] == 'nested'){
-            $tmp = formaterExplode($item['value'], $deep + 1);
+        if($item['type'] == 'nested'){
+            $tmp = formater($item['value'], $deep + 1);
             return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
         }
-        if ($item['status'] == 'unchanged') {
+        if ($item['type'] == 'unchanged') {
             $tmp = arrToStr($item['value'], $deep + 1);
             return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
         }
-        if ($item['status'] == 'changed') {
+        if ($item['type'] == 'changed') {
             $tempBefore = arrToStr($item['valueBefore'], $deep + 1);
             $tempAfter = arrToStr($item['valueAfter'], $deep + 1);
             return $sep . MINUS . $item['name'] . ": " . $tempBefore . "\n" . $sep . PLUS . $item['name'] . ": " . $tempAfter . "\n";
         }
-        if ($item['status'] == 'removed') {
+        if ($item['type'] == 'removed') {
             $tmp = arrToStr($item['value'], $deep + 1);
             return $sep . MINUS . $item['name'] . ": " . $tmp . "\n";
         }
-        if ($item['status'] == 'added') {
+        if ($item['type'] == 'added') {
             $tmp = arrToStr($item['value'], $deep + 1);
             return $sep . PLUS . $item['name'] . ": " . $tmp . "\n";
         }
-        if ($item['status'] == 'return') {
+        if ($item['type'] == 'return') {
             $tmp = arrToStr($item['value'], $deep + 1);
             return $sep . UNCHANGED . $item['name'] . ": " . $tmp . "\n";
         }
     }, $arr);
         array_unshift($res, "{\n");
         array_push($res, $sep . "}");
-    return implode($res);
+    // return implode($res);
+    return $res;
 }
 
 function arrToStr($arr, $deep)
 {
     if (is_array($arr)){
-        return formaterExplode($arr, $deep);
+        return formater($arr, $deep);
     } else {
         return $arr;
     }
@@ -51,18 +52,18 @@ function arrToStr($arr, $deep)
 function buldPlain($tree)
 {
     $res = array_reduce($tree, function ($acc, $node) {
-        if (array_key_exists('status', $node) && $node['status'] == 'nested') {
+        if (array_key_exists('type', $node) && $node['type'] == 'nested') {
             $tmp = buldPlain($node['value']);
             $acc = array_merge($acc, $tmp);   
         }
-        if (array_key_exists('plain', $node) && $node['status'] == 'changed') {
+        if (array_key_exists('plain', $node) && $node['type'] == 'changed') {
             $acc[] = "Property '" . substr($node['path'], 1) . "' was updated. From " .
             checkArray($node['valueBefore']) .  " to "  . checkArray($node['valueAfter']) . ".";
         }
-        if (array_key_exists('plain', $node) && $node['status'] == 'removed') {
+        if (array_key_exists('plain', $node) && $node['type'] == 'removed') {
             $acc[] = "Property '" . substr($node['path'], 1) . "' was removed.";
         }
-        if (array_key_exists('plain', $node) && $node['status'] == 'added') {
+        if (array_key_exists('plain', $node) && $node['type'] == 'added') {
             $acc[] = "Property '" . substr($node['path'], 1) . "' was added with value: " .
             checkArray($node['value']) . ".";
         }
@@ -84,8 +85,36 @@ function plain($arr)
     return implode("\n", buldPlain($arr));
 }
 
+function jsonFormat($tree)
+{
+    $res = array_map(function ($node) {
+        if ($node['type'] == 'nested'){
+            return [
+                    'name' => $node['name'],
+                    'type' => $node['type'],
+                    'value' => jsonFormat($node['value']),
+                ];
+        } else {
+            if (array_key_exists('valueBefore', $node)) {
+                return [
+                    'name' => $node['name'],
+                    'type' => $node['type'],
+                    'valueBefore' => $node['valueBefore'],
+                    'valueAfter' => $node['valueAfter'],
+                ];
+            } else{
+                return [
+                    'name' => $node['name'],
+                    'type' => $node['type'],
+                    'value' => $node['value'],
+                ];
+            }
+        }
 
 
+    }, $tree);
+    return $res;
+}
 
 
 
@@ -123,13 +152,13 @@ function plain($arr)
 //     //     if (array_key_exists('type', $array) && $array['type'] == 'parent') {
 //     //         $res['    ' . $array['name']] = xDif($array['value']);
 //     //     } else {
-//     //         if (array_key_exists('status', $array) && $array['status'] == 'dontChange') {
+//     //         if (array_key_exists('type', $array) && $array['type'] == 'dontChange') {
 //     //             $res['    ' . $array['name']] = $array['value'];
-//     //         } elseif (array_key_exists('status', $array) && $array['status'] == 'removed') {
+//     //         } elseif (array_key_exists('type', $array) && $array['type'] == 'removed') {
 //     //             $res['  - ' . $array['name']] = correctStruktures($array['value']);
-//     //         } elseif (array_key_exists('status', $array) && $array['status'] == 'added') {
+//     //         } elseif (array_key_exists('type', $array) && $array['type'] == 'added') {
 //     //             $res['  + ' . $array['name']] = correctStruktures($array['value']);
-//     //         } elseif (array_key_exists('status', $array) && $array['status'] == 'changed') {
+//     //         } elseif (array_key_exists('type', $array) && $array['type'] == 'changed') {
 //     //             $res['  - ' . $array['name']] = correctStruktures($array['beforeValue']);
 //     //             $res['  + ' . $array['name']] = correctStruktures($array['afterValue']);
 //     //         }
@@ -137,14 +166,14 @@ function plain($arr)
 //     // }
 
 //     $res = array_reduce($tree, function ($acc, $node) {
-//         if (array_key_exists('status', $node) && $node['status'] == 'unchanged') {
+//         if (array_key_exists('type', $node) && $node['type'] == 'unchanged') {
 //             $acc['    ' . $node['name']] = $node['value'];
-//         } elseif (array_key_exists('status', $node) && $node['status'] == 'changed') {
+//         } elseif (array_key_exists('type', $node) && $node['type'] == 'changed') {
 //             $acc['  - ' . $node['name']] = $node['valueBefore'];
 //             $acc['  + ' . $node['name']] = $node['valueAfter'];
-//         } elseif (array_key_exists('status', $node) && $node['status'] == 'removed') {
+//         } elseif (array_key_exists('type', $node) && $node['type'] == 'removed') {
 //             $acc['  - ' . $node['name']] = $node['value'];
-//         } elseif (array_key_exists('status', $node) && $node['status'] == 'added') {
+//         } elseif (array_key_exists('type', $node) && $node['type'] == 'added') {
 //             $acc['  + ' . $node['name']] = $node['value'];
 //         }
 //         return $acc;

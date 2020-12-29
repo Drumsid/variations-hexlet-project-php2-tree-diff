@@ -87,104 +87,64 @@ function builder($objBefore, $objAfter, $path = "")
 {
     $unicKey = union(array_keys(get_object_vars($objBefore)), array_keys(get_object_vars($objAfter)));
     sort($unicKey);
-    // print_r(array_values($unicKey));
     $res = array_map(function ($key) use ($objBefore, $objAfter, $path) {
         if (
             property_exists($objBefore, $key) && property_exists($objAfter, $key)
             && is_object($objBefore->$key) && is_object($objAfter->$key)
-            // is_object($objBefore->$key) && is_object($objAfter->$key)
         ) {
             return [
                 'name' => $key,
                 'type' => 'nested',
-                // 'path' => $path . '.' . $key,
-                // 'value' => builder($objBefore->$key, $objAfter->$key, $path . '.' . $key)
                 'children' => builder($objBefore->$key, $objAfter->$key, $path . '.' . $key)
             ];
-        } else {
-            if (
-                property_exists($objBefore, $key) && property_exists($objAfter, $key)
-                && ($objBefore->$key != $objAfter->$key)
-            ) {
-                return [
-                    'name' => $key,
-                    'type' => 'changed',
-                    'format' => 'plain',
-                    'path' => $path . '.' . $key,
-                    // 'valueBefore' => transformObjectToArr(boolOrNullToString($objBefore->$key)),
-                    // 'valueAfter' => transformObjectToArr(boolOrNullToString($objAfter->$key))
-                    'valueBefore' => $objBefore->$key,
-                    'valueAfter' => $objAfter->$key
-                ];
-            } elseif (/*property_exists($objBefore, $key) &&*/ ! property_exists($objAfter, $key)) {
-                return [
-                    'name' => $key,
-                    'type' => 'removed',
-                    'format' => 'plain',
-                    'path' => $path . '.' . $key,
-                    // 'value' => transformObjectToArr(boolOrNullToString($objBefore->$key))
-                    'value' => $objBefore->$key
-                ];
-            } elseif (! property_exists($objBefore, $key)/* && property_exists($objAfter, $key)*/) {
-                return [
-                    'name' => $key,
-                    'type' => 'added',
-                    'format' => 'plain',
-                    'path' => $path . '.' . $key,
-                    // 'value' => transformObjectToArr(boolOrNullToString($objAfter->$key))
-                    'value' => $objAfter->$key
-                ];
-            } else {
-                return [
-                    'name' => $key,
-                    'type' => 'unchanged',
-                    'format' => 'plain',
-                    'path' => $path . '.' . $key,
-                    // 'value' => boolOrNullToString($objBefore->$key)
-                    'value' => $objBefore->$key
-                ];
-            }
         }
+        // else {
+        if (
+            property_exists($objBefore, $key) && property_exists($objAfter, $key)
+            && ($objBefore->$key != $objAfter->$key)
+        ) {
+            return [
+                'name' => $key,
+                'type' => 'changed',
+                // 'format' => 'plain',
+                'path' => $path . '.' . $key,
+                'valueBefore' => $objBefore->$key,
+                'valueAfter' => $objAfter->$key
+            ];
+        }
+        if (! property_exists($objAfter, $key)) {
+            return [
+                'name' => $key,
+                'type' => 'removed',
+                // 'format' => 'plain',
+                'path' => $path . '.' . $key,
+                'value' => $objBefore->$key
+            ];
+        }
+        if (! property_exists($objBefore, $key)) {
+            return [
+                'name' => $key,
+                'type' => 'added',
+                // 'format' => 'plain',
+                'path' => $path . '.' . $key,
+                'value' => $objAfter->$key
+            ];
+        } else {
+            return [
+                'name' => $key,
+                'type' => 'unchanged',
+                'path' => $path . '.' . $key,
+                'value' => $objBefore->$key
+            ];
+        }
+        // }
     }, $unicKey);
-
-    // usort($res, function ($item1, $item2) {
-    //     if ($item1['name'] == $item2['name']) {
-    //         return 0;
-    //     }
-    //     return ($item1['name'] < $item2['name']) ? -1 : 1;
-    // });
     return $res;
 }
 
-function transformObjectToArr($obj)
+function stringify($data)
 {
-    if (is_object($obj)) {
-        $obj = get_object_vars($obj);
-    } else {
-        return $obj;
-    }
-    $keys = array_keys($obj);
-    $res = array_reduce($keys, function ($acc, $key) use ($obj) {
-        if (is_object($obj[$key])) {
-            $acc[] = [
-                'name' => $key,
-                'type' => 'return',
-                'value' => transformObjectToArr($obj[$key])
-            ];
-        } else {
-            $acc[] = [
-                'name' => $key,
-                'type' => 'return',
-                'value' => $obj[$key]
-            ];
-        }
-        return $acc;
-    }, []);
-    return $res;
-}
-
-function boolOrNullToString($data)
-{
+    // print_r($data);
     if (is_null($data)) {
         return 'null';
     }
@@ -194,93 +154,102 @@ function boolOrNullToString($data)
     if (is_bool($data) && $data === false) {
         return 'false';
     }
-    return $data;
+    
+    if (! is_object($data)) {
+        return $data;
+    } else {
+        $obj = get_object_vars($data);
+    }
+    $keys = array_keys($obj);
+        $res = array_reduce($keys, function ($acc, $key) use ($obj) {
+            if (is_object($obj[$key])) {
+                $acc[] = [
+                    'name' => $key,
+                    // 'type' => 'return',
+                    'value' => stringify($obj[$key])
+                ];
+            } else {
+                $acc[] = [
+                    'name' => $key,
+                    // 'type' => 'return',
+                    'value' => $obj[$key]
+                ];
+            }
+            return $acc;
+        }, []);
+        return $res;
 }
+
 
 $objBefore = json_decode($before);
 $objAfter = json_decode($after);
 $deepObjBefore = json_decode($dBefore);
 $deepObjAfter = json_decode($dAfter);
 
-// const UNCHANGED = "    ";
-// const PLUS = "  + ";
-// const MINUS = "  - ";
-
-function stylish($arr, $deep = 0)
+function stylish($arr, $depth = 0)
 {
-    $sep = str_repeat('    ', $deep);
-    $res = array_map(function ($item) use ($sep, $deep) {
-        // if ($item['type'] == 'nested') {
-        //     $tmp = stylish($item['children'], $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'unchanged') {
-        //     $tmp = arrToStr($item['value'], $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'changed') {
-        //     // $tempBefore = arrToStr($item['valueBefore'], $deep + 1);
-        //     // $tempAfter = arrToStr($item['valueAfter'], $deep + 1);
-        //     $tempBefore = transformObjectToArr(boolOrNullToString($item['valueBefore']));
-        //     $tempBefore = arrToStr($tempBefore, $deep + 1);
-        //     $tempAfter = transformObjectToArr(boolOrNullToString($item['valueAfter']));
-        //     $tempAfter = arrToStr($tempAfter, $deep + 1);
-        //     return $sep . "  - " . $item['name'] . " : " . $tempBefore . "\n" . $sep .
-        //     "  + " . $item['name'] . " : " . $tempAfter . "\n";
-        // }
-        // if ($item['type'] == 'removed') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "  - " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'added') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "  + " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        // if ($item['type'] == 'return') {
-        //     // $tmp = arrToStr($item['value'], $deep + 1);
-        //     $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-        //     $tmp = arrToStr($tmp, $deep + 1);
-        //     return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
-        // }
-        switch ($item['type']) {
+    $sep = str_repeat('    ', $depth);
+    $res = array_map(function ($item) use ($sep, $depth) {
+        $type = 'none';
+        if (array_key_exists('type', $item)) {
+            $type = $item['type'];
+        }
+        switch ($type) {
             case 'nested':
-                $tmp = stylish($item['children'], $deep + 1);
-                return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
+                $children = stylish($item['children'], $depth + 1);
+                return $sep . "    " . $item['name'] . " : " . $children . "\n";
             case 'unchanged':
-                $tmp = arrToStr($item['value'], $deep + 1);
-                return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
+                $unchanged = arrToStr($item['value'], $depth + 1);
+                return $sep . "    " . $item['name'] . " : " . $unchanged . "\n";
+                // return $sep . "    " . $item['name'] . " : " . $item['value'] . "\n";
             case 'changed':
-                $tempBefore = transformObjectToArr(boolOrNullToString($item['valueBefore']));
-                $tempBefore = arrToStr($tempBefore, $deep + 1);
-                $tempAfter = transformObjectToArr(boolOrNullToString($item['valueAfter']));
-                $tempAfter = arrToStr($tempAfter, $deep + 1);
-                return $sep . "  - " . $item['name'] . " : " . $tempBefore . "\n" . $sep .
-                "  + " . $item['name'] . " : " . $tempAfter . "\n";
+                $transformedBefore = testStr(stringify($item['valueBefore']), $sep);
+                $changedBefore = arrToStr($transformedBefore, $depth + 1);
+                $transformedAfter = testStr(stringify($item['valueAfter']), $sep);
+                $changedAfter = arrToStr($transformedAfter, $depth + 1);
+                return $sep . "  - " . $item['name'] . " : " . $changedBefore . "\n" . $sep .
+                "  + " . $item['name'] . " : " . $changedAfter . "\n";
             case 'removed':
-                $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-                $tmp = arrToStr($tmp, $deep + 1);
-                return $sep . "  - " . $item['name'] . " : " . $tmp . "\n";
+                $transformed = testStr(stringify($item['value']), $sep);
+                $removed = arrToStr($transformed, $depth + 1);
+                return $sep . "  - " . $item['name'] . " : " . $removed . "\n";
             case 'added':
-                $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-                $tmp = arrToStr($tmp, $deep + 1);
-                return $sep . "  + " . $item['name'] . " : " . $tmp . "\n";
-            case 'return':
-                $tmp = transformObjectToArr(boolOrNullToString($item['value']));
-                $tmp = arrToStr($tmp, $deep + 1);
-                return $sep . "    " . $item['name'] . " : " . $tmp . "\n";
+                $transformed = testStr(stringify($item['value']), $sep);
+                $added = arrToStr($transformed, $depth + 1);
+                return $sep . "  + " . $item['name'] . " : " . $added . "\n";
+            default:
+                $transformed = testStr(stringify($item['value']), $sep);
+                $return = arrToStr($transformed, $depth + 1);
+                return $sep . "    " . $item['name'] . " : " . $return . "\n";
         }
     }, $arr);
+    // print_r($res);
+    // return implode(addBrackets($res, $sep));
+    if (is_array($res)) {
+        return implode(addBrackets($res, $sep));
+    }
+    return $res;
+    // return addBrackets($res, $sep);
+}
+function testStr($arr, $sep)
+{
+    if (!is_array($arr)) {
+        return $arr;
+    }
+    $res = array_map(function ($node) use ($sep) {
+        if (is_array($node['value'])) {
+            return $sep . "    " . $node['name'] . " : " . testStr($node['value'], $sep) . "\n";
+        } else {
+            return $sep . "    " . $node['name'] . " : " . $node['value'] . "\n";
+        }
+    }, $arr);
+    // return implode($res);
     return implode(addBrackets($res, $sep));
 }
-
-function arrToStr($arr, $deep)
+function arrToStr($arr, $depth)
 {
     if (is_array($arr)) {
-        return stylish($arr, $deep);
+        return stylish($arr, $depth);
     } else {
         return $arr;
     }
@@ -288,11 +257,13 @@ function arrToStr($arr, $deep)
 
 function addBrackets($tree, $sep)
 {
+    $first = 0;
     $last = count($tree) - 1;
-    $tree[0] = "{\n" . $tree[0];
+    $tree[$first] = "{\n" . $tree[$first];
     $tree[$last] = $tree[$last] . $sep . "}";
     return $tree;
 }
+
 
 function buldPlain($tree)
 {
@@ -336,9 +307,9 @@ function plain($arr)
 
 $tree = builder($objBefore, $objAfter);
 // print_r($tree);
-print_r(plain($tree));
+// print_r(plain($tree));
 // print_r(stylish($tree));
 $dTree = builder($deepObjBefore, $deepObjAfter);
 // print_r($dTree);
 // print_r(plain($dTree));
-// print_r(stylish($dTree));
+print_r(stylish($dTree));

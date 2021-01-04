@@ -161,23 +161,22 @@ function stringify($data)
         $obj = get_object_vars($data);
     }
     $keys = array_keys($obj);
-        $res = array_reduce($keys, function ($acc, $key) use ($obj) {
-            if (is_object($obj[$key])) {
-                $acc[] = [
-                    'name' => $key,
-                    // 'type' => 'return',
-                    'value' => stringify($obj[$key])
-                ];
-            } else {
-                $acc[] = [
-                    'name' => $key,
-                    // 'type' => 'return',
-                    'value' => $obj[$key]
-                ];
-            }
-            return $acc;
-        }, []);
-        return $res;
+
+    $res = array_reduce($keys, function ($acc, $key) use ($obj) {
+        if (is_object($obj[$key])) {
+            $acc[] = [
+                'name' => $key,
+                'value' => stringify($obj[$key])
+            ];
+        } else {
+            $acc[] = [
+                'name' => $key,
+                'value' => $obj[$key]
+            ];
+        }
+        return $acc;
+    }, []);
+    return $res;
 }
 
 
@@ -188,7 +187,6 @@ $deepObjAfter = json_decode($dAfter);
 
 function stylish($arr, $depth = 0)
 {
-<<<<<<< HEAD
     $sep = str_repeat('    ', $depth);
     $res = array_map(function ($item) use ($sep, $depth) {
         $type = 'none';
@@ -196,75 +194,58 @@ function stylish($arr, $depth = 0)
             $type = $item['type'];
         }
         switch ($type) {
-=======
-    $sep = str_repeat('    ', $deep);
-    $res = array_map(function ($item) use ($sep, $deep) {
-        switch ($item['type']) {
->>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
             case 'nested':
                 $children = stylish($item['children'], $depth + 1);
                 return $sep . "    " . $item['name'] . " : " . $children . "\n";
             case 'unchanged':
-                $unchanged = arrToStr($item['value'], $depth + 1);
+                $unchanged = $item['value'];
                 return $sep . "    " . $item['name'] . " : " . $unchanged . "\n";
-                // return $sep . "    " . $item['name'] . " : " . $item['value'] . "\n";
             case 'changed':
-                $transformedBefore = testStr(stringify($item['valueBefore']), $sep);
-                $changedBefore = arrToStr($transformedBefore, $depth + 1);
-                $transformedAfter = testStr(stringify($item['valueAfter']), $sep);
-                $changedAfter = arrToStr($transformedAfter, $depth + 1);
+                $changedBefore = arrToStr(stringify($item['valueBefore']), $depth + 1);
+                $changedAfter = arrToStr(stringify($item['valueAfter']), $depth + 1);
                 return $sep . "  - " . $item['name'] . " : " . $changedBefore . "\n" . $sep .
                 "  + " . $item['name'] . " : " . $changedAfter . "\n";
             case 'removed':
-                $transformed = testStr(stringify($item['value']), $sep);
-                $removed = arrToStr($transformed, $depth + 1);
+                $removed = arrToStr(stringify($item['value']), $depth + 1);
                 return $sep . "  - " . $item['name'] . " : " . $removed . "\n";
             case 'added':
-                $transformed = testStr(stringify($item['value']), $sep);
-                $added = arrToStr($transformed, $depth + 1);
+                $added = arrToStr(stringify($item['value']), $depth + 1);
                 return $sep . "  + " . $item['name'] . " : " . $added . "\n";
-            default:
-                $transformed = testStr(stringify($item['value']), $sep);
-                $return = arrToStr($transformed, $depth + 1);
-                return $sep . "    " . $item['name'] . " : " . $return . "\n";
+            // default:
+            //     $transformed = arrToStr(stringify($item['value']), $sep);
+            //     $return = arrToStr($transformed, $depth + 1);
+            //     return $sep . "    " . $item['name'] . " : " . $return . "\n";
         }
     }, $arr);
-    // print_r($res);
-    // return implode(addBrackets($res, $sep));
+    
     if (is_array($res)) {
         return implode(addBrackets($res, $sep));
     }
     return $res;
-    // return addBrackets($res, $sep);
 }
-function testStr($arr, $sep)
+function arrToStr($arr, $depth)
 {
+    $sep = str_repeat('    ', $depth);
     if (!is_array($arr)) {
         return $arr;
     }
-    $res = array_map(function ($node) use ($sep) {
+    $res = array_map(function ($node) use ($depth, $sep) {
         if (is_array($node['value'])) {
-            return $sep . "    " . $node['name'] . " : " . testStr($node['value'], $sep) . "\n";
+            return $sep . "    " . $node['name'] . " : " . arrToStr($node['value'], $depth + 1) . "\n";
         } else {
             return $sep . "    " . $node['name'] . " : " . $node['value'] . "\n";
         }
     }, $arr);
-<<<<<<< HEAD
-    // return implode($res);
     return implode(addBrackets($res, $sep));
-=======
-    // return implode(addBrackets($res, $sep));
-    return addBrackets($res, $sep);  // начинай отсюда refactoring свой! нужно из функции stylish сделать наподобие plain
->>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
 }
-function arrToStr($arr, $depth)
-{
-    if (is_array($arr)) {
-        return stylish($arr, $depth);
-    } else {
-        return $arr;
-    }
-}
+// function arrToStr($arr, $depth)
+// {
+//     if (is_array($arr)) {
+//         return stylish($arr, $depth);
+//     } else {
+//         return $arr;
+//     }
+// }
 
 function addBrackets($tree, $sep)
 {
@@ -283,17 +264,17 @@ function buldPlain($tree)
             $tmp = buldPlain($node['children']);
             $acc = array_merge($acc, $tmp);
         }
-        if (array_key_exists('format', $node) && $node['type'] == 'changed') {
-            $node['valueBefore'] = transformObjectToArr(boolOrNullToString($node['valueBefore']));
-            $node['valueAfter'] = transformObjectToArr(boolOrNullToString($node['valueAfter']));
+        if (array_key_exists('type', $node) && $node['type'] == 'changed') {
+            $node['valueBefore'] = stringify($node['valueBefore']);
+            $node['valueAfter'] = stringify($node['valueAfter']);
             $acc[] = "Property '" . substr($node['path'], 1) . "' was updated. From " .
             checkArray($node['valueBefore']) .  " to "  . checkArray($node['valueAfter']) . ".";
         }
-        if (array_key_exists('format', $node) && $node['type'] == 'removed') {
+        if (array_key_exists('type', $node) && $node['type'] == 'removed') {
             $acc[] = "Property '" . substr($node['path'], 1) . "' was removed.";
         }
-        if (array_key_exists('format', $node) && $node['type'] == 'added') {
-            $node['value'] = transformObjectToArr(boolOrNullToString($node['value']));
+        if (array_key_exists('type', $node) && $node['type'] == 'added') {
+            $node['value'] = stringify($node['value']);
             $acc[] = "Property '" . substr($node['path'], 1) . "' was added with value: " .
             checkArray($node['value']) . ".";
         }
@@ -319,12 +300,8 @@ function plain($arr)
 $tree = builder($objBefore, $objAfter);
 // print_r($tree);
 // print_r(plain($tree));
-<<<<<<< HEAD
 // print_r(stylish($tree));
-=======
-print_r(stylish($tree));
->>>>>>> 18534975d14705feb5fba07345d5bbf640b5b000
 $dTree = builder($deepObjBefore, $deepObjAfter);
 // print_r($dTree);
 // print_r(plain($dTree));
-print_r(stylish($dTree));
+// print_r(stylish($dTree));
